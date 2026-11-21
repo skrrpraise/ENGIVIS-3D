@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>EngiVis 3D — Interactive Engineering & Physics Lab</title>
+  <!-- Tailwind CSS for responsive, sleek dark-mode academic layout -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Three.js r128 CDN for real-time 3D engineering models and simulations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            slatebg: '#090d16',
+            panel: '#111827',
+            panelBorder: '#1f2937',
+            accent: '#38bdf8',
+            accentWarm: '#f59e0b',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #090d16;
+      color: #f3f4f6;
+      overflow-x: hidden;
+    }
+    /* Custom range slider styling for crisp mobile & desktop control */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #1f2937;
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+      border: 2px solid #090d16;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+      transition: transform 0.15s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+      border: 2px solid #090d16;
+    }
+    #canvas-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+    #canvas-container:active {
+      cursor: grabbing;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    /* Subtle scrollbar for controls panel */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f2937;
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans bg-slatebg text-gray-100">
+
+  <!-- TOP NAVIGATION & SEARCH BAR -->
+  <header class="sticky top-0 z-30 bg-panel/95 backdrop-blur border-b border-panelBorder px-3 sm:px-6 py-3">
+    <div class="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+      <!-- Brand Identity -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-base sm:text-lg tracking-tight text-white">EngiVis <span class="text-sky-400">3D</span></span>
+              <span class="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30">Interactive Lab</span>
+            </div>
+            <p class="text-[11px] text-gray-400 hidden sm:block">Visual Engineering & Physics Simulation Engine</p>
+          </div>
+        </div>
+
+        <!-- Mobile Quick Reset -->
+        <button id="mobile-reset-btn" class="lg:hidden px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs font-medium text-gray-200 border border-gray-700">
+          Reset View
+        </button>
+      </div>
+
+      <!-- Keyword Search & Topic Pills -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1 lg:max-w-3xl">
+        <!-- Search Input -->
+        <div class="relative flex-1">
+          <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+          </svg>
+          <input
+            id="topic-search"
+            type="text"
+            placeholder="Search concept: 'bending moment', 'beam', 'newton', 'gravity', 'projectile'..."
+            class="w-full pl-9 pr-8 py-2 rounded-xl bg-slatebg border border-gray-700 focus:border-sky-400 text-xs sm:text-sm text-gray-100 placeholder-gray-500 outline-none transition"
+          />
+          <button id="clear-search" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs">✕</button>
+        </div>
+
+        <!-- Module Switcher Pills -->
+        <div id="module-tabs" class="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0">
+          <button data-module="beam" class="module-btn active-tab shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-sky-500/20 text-sky-300 border border-sky-400/50">
+            <span>1.</span> Bending & Beam
+          </button>
+          <button data-module="newton" class="module-btn shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-gray-800/80 text-gray-300 border border-gray-700 hover:border-gray-500">
+            <span>2.</span> Newton's Laws
+          </button>
+          <button data-module="projectile" class="module-btn shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-gray-800/80 text-gray-300 border border-gray-700 hover:border-gray-500">
+            <span>3.</span> Gravity & Trajectory
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Suggestions Dropdown (appears when typing keywords) -->
+    <div id="search-results" class="hidden max-w-7xl mx-auto mt-2 bg-slatebg border border-gray-700 rounded-xl p-2 shadow-2xl"></div>
+  </header>
+
+  <!-- MAIN WORKSPACE: 3D STAGE + INTERACTIVE INSPECTOR -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+    <!-- LEFT / TOP: 3D INTERACTIVE VIEWPORT & STEP BREAKDOWN (7 cols on desktop) -->
+    <section class="lg:col-span-7 flex flex-col gap-3">
+      <!-- 3D Canvas Card -->
+      <div class="relative rounded-2xl overflow-hidden border border-panelBorder bg-gradient-to-b from-[#0c1322] to-[#070a12] shadow-2xl h-[340px] sm:h-[430px] lg:h-[470px]">
+        <!-- Top Overlay Badges -->
+        <div class="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+          <div class="bg-panel/85 backdrop-blur-md border border-gray-700/80 rounded-xl px-3 py-1.5 pointer-events-auto">
+            <span id="viewport-category" class="text-[10px] font-mono uppercase tracking-wider text-sky-400 block">Structural Mechanics</span>
+            <h1 id="viewport-title" class="text-xs sm:text-sm font-bold text-white">Simply Supported Beam & Bending Moment</h1>
+          </div>
+
+          <!-- Legend Badge -->
+          <div id="viewport-legend" class="bg-panel/85 backdrop-blur-md border border-gray-700/80 rounded-xl px-3 py-1.5 text-[11px] flex items-center gap-3 pointer-events-auto">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>Compression</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block"></span>Tension</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>Load</span>
+          </div>
+        </div>
+
+        <!-- Three.js Mount Point -->
+        <div id="canvas-container"></div>
+
+        <!-- Bottom Viewport Controls Overlay -->
+        <div class="absolute bottom-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+          <div class="text-[11px] text-gray-400 bg-panel/80 backdrop-blur px-2.5 py-1 rounded-lg border border-gray-800 pointer-events-auto">
+            Drag to rotate • Pinch/Scroll to zoom
+          </div>
+
+          <div class="flex items-center gap-2 pointer-events-auto">
+            <button id="btn-play-pause" class="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs shadow-lg shadow-sky-500/25 flex items-center gap-1.5 transition">
+              <span id="play-icon">⏸</span>
+              <span id="play-label">Pause</span>
+            </button>
+            <button id="btn-reset" class="px-3.5 py-2 rounded-xl bg-panel/90 hover:bg-gray-800 text-gray-200 font-semibold text-xs border border-gray-700 transition">
+              ↺ Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP-BY-STEP PRINCIPLE BREAKDOWN BAR -->
+      <div class="rounded-2xl bg-panel border border-panelBorder p-3.5 sm:p-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div>
+            <span class="text-[11px] font-mono uppercase tracking-wider text-amber-400">Guided Visual Learning</span>
+            <h2 class="text-sm font-bold text-white">Step-by-Step Principle Breakdown</h2>
+          </div>
+          <!-- Step Buttons -->
+          <div class="grid grid-cols-3 gap-1.5 bg-slatebg p-1 rounded-xl border border-gray-800">
+            <button data-step="1" class="step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition bg-sky-500 text-slate-950">
+              Step 1: Setup
+            </button>
+            <button data-step="2" class="step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition text-gray-300 hover:text-white">
+              Step 2: Forces
+            </button>
+            <button data-step="3" class="step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition text-gray-300 hover:text-white">
+              Step 3: Equations
+            </button>
+          </div>
+        </div>
+
+        <!-- Step Explanation Box -->
+        <div id="step-content" class="rounded-xl bg-slatebg/90 border border-gray-800 p-3.5 text-xs sm:text-sm text-gray-300 leading-relaxed">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT / BOTTOM: PARAMETERS, LIVE CALCULATIONS & DIAGRAMS (5 cols on desktop) -->
+    <aside class="lg:col-span-5 flex flex-col gap-3">
+
+      <!-- Interactive Parameter Controls Card -->
+      <div class="rounded-2xl bg-panel border border-panelBorder p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+            Interactive Parameters
+          </h2>
+          <span class="text-[11px] font-mono text-gray-400">Real-Time Physics</span>
+        </div>
+
+        <!-- Dynamic Sliders Container -->
+        <div id="controls-container" class="space-y-4">
+          <!-- Sliders injected dynamically per module -->
+        </div>
+      </div>
+
+      <!-- Live Telemetry & Calculated Values Card -->
+      <div class="rounded-2xl bg-panel border border-panelBorder p-4">
+        <h2 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+          Live Engineering Telemetry
+        </h2>
+        <div id="metrics-grid" class="grid grid-cols-2 gap-2.5">
+          <!-- Calculated cards injected dynamically -->
+        </div>
+      </div>
+
+      <!-- Module 1 Synchronized Shear Force & Bending Moment Diagram Panel -->
+      <div id="diagrams-card" class="rounded-2xl bg-panel border border-panelBorder p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-bold text-white">Live SFD & BMD Diagrams</h2>
+          <span class="text-[10px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">Synchronized</span>
+        </div>
+        <p class="text-[11px] text-gray-400 mb-3">Shear Force $V(x)$ and Bending Moment $M(x)$ update live as you move the load or change span.</p>
+
+        <div class="space-y-3">
+          <div class="bg-slatebg rounded-xl p-2.5 border border-gray-800">
+            <div class="flex justify-between text-[11px] font-mono mb-1">
+              <span class="text-emerald-400 font-semibold">Shear Force Diagram (SFD)</span>
+              <span id="sfd-badge" class="text-gray-400">kN</span>
+            </div>
+            <canvas id="sfd-canvas" class="w-full h-24 rounded"></canvas>
+          </div>
+
+          <div class="bg-slatebg rounded-xl p-2.5 border border-gray-800">
+            <div class="flex justify-between text-[11px] font-mono mb-1">
+              <span class="text-amber-400 font-semibold">Bending Moment Diagram (BMD)</span>
+              <span id="bmd-badge" class="text-gray-400">kN·m</span>
+            </div>
+            <canvas id="bmd-canvas" class="w-full h-24 rounded"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Governing Equations & Intuition Card -->
+      <div class="rounded-2xl bg-panel border border-panelBorder p-4">
+        <h2 class="text-sm font-bold text-white mb-2">Governing Equations & Intuition</h2>
+        <div id="formula-box" class="bg-slatebg rounded-xl p-3 border border-gray-800 font-mono text-xs text-sky-300 space-y-1.5">
+          <!-- Formulas injected dynamically -->
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <script>
+    /**
+     * EngiVis 3D — Interactive Engineering & Physics Visual Lab
+     * Single-file Three.js + Vanilla JS simulation engine.
+     * Supports mouse/touch 3D orbit controls, responsive resizing,
+     * step-by-step guided principle breakdowns, and live engineering diagrams.
+     */
+
+    // =========================================================================
+    // 1. CURRICULUM & SEARCH METADATA
+    // =========================================================================
+    const MODULES = {
+      beam: {
+        id: 'beam',
+        category: 'Structural Mechanics • Strength of Materials',
+        title: 'Simply Supported Beam & Bending Moment',
+        keywords: ['bending moment', 'beam', 'shear force', 'sfd', 'bmd', 'deflection', 'stress', 'tension', 'compression', 'support', 'load', 'structure', 'civil', 'mechanical'],
+        legend: [
+          { color: 'bg-rose-500', label: 'Compression (Top)' },
+          { color: 'bg-sky-400', label: 'Tension (Bottom)' },
+          { color: 'bg-amber-400', label: 'Point Load P' }
+        ],
+        steps: {
+          1: {
+            heading: 'Step 1: Structural Setup & Boundary Conditions',
+            body: 'A horizontal beam of span <strong>L</strong> rests on a <strong>Pin Support</strong> at the left (resists vertical & horizontal movement) and a <strong>Roller Support</strong> at the right (allows thermal expansion/rotation). Before load is applied, internal stress is zero.'
+          },
+          2: {
+            heading: 'Step 2: External Load, Reactions & Internal Stress',
+            body: 'Applying downward load <strong>P</strong> at distance <strong>x</strong> generates upward reactions <strong>R₁</strong> and <strong>R₂</strong>. Notice the beam bends downward: top fibers squeeze together (<strong>Red = Compression</strong>) while bottom fibers stretch apart (<strong>Blue = Tension</strong>).'
+          },
+          3: {
+            heading: 'Step 3: Maximum Shear & Bending Moment Equations',
+            body: 'Maximum bending moment occurs directly beneath the point load where Shear Force crosses zero: <strong>M_max = (P · x · (L − x)) / L</strong>. Moving the load to mid-span (x = L/2) maximizes bending to <strong>P·L / 4</strong>.'
+          }
+        },
+        formulas: [
+          'R₁ = P · (L − x) / L   |   R₂ = P · x / L',
+          'V_max = max(R₁, R₂)',
+          'M_max = P · x · (L − x) / L  (at load point x)',
+          'σ = −M · y / I   (Bending Stress Distribution)'
+        ]
+      },
+      newton: {
+        id: 'newton',
+        category: 'Classical Mechanics • Dynamics',
+        title: "Newton's Laws of Motion & Free-Body Dynamics",
+        keywords: ['newton', 'motion', 'force', 'friction', 'mass', 'acceleration', 'inertia', 'free body', 'dynamics', 'second law', 'velocity', 'kinetic'],
+        legend: [
+          { color: 'bg-emerald-400', label: 'Applied Force F' },
+          { color: 'bg-rose-500', label: 'Friction f_k' },
+          { color: 'bg-sky-400', label: 'Normal N' },
+          { color: 'bg-amber-400', label: 'Weight mg' }
+        ],
+        steps: {
+          1: {
+            heading: 'Step 1: Inertia & Vertical Equilibrium (1st Law)',
+            body: 'A body of mass <strong>m</strong> rests on a horizontal track. Downward gravitational weight (<strong>W = m·g</strong>) is balanced by the upward surface Normal Force (<strong>N = m·g</strong>). Without unbalanced horizontal force, the block stays at rest.'
+          },
+          2: {
+            heading: 'Step 2: Free-Body Force Vectors in Action',
+            body: 'Pulling/pushing with Applied Force <strong>F</strong> activates opposing surface Friction (<strong>f = μ·N</strong>). If <strong>F ≤ μ·N</strong>, static friction locks the block in place. Once <strong>F > μ·N</strong>, net force accelerates the mass forward.'
+          },
+          3: {
+            heading: 'Step 3: Newton’s Second Law (F_net = m · a)',
+            body: 'Net horizontal force drives acceleration: <strong>a = (F − μ·m·g) / m</strong>. Notice how increasing mass <strong>m</strong> increases both inertia and normal friction force, reducing acceleration for the same push.'
+          }
+        },
+        formulas: [
+          'N = m · g   (g = 9.81 m/s²)',
+          'f_max = μ · N = μ · m · g',
+          'F_net = max(0, F − f_max)',
+          'a = F_net / m   |   v(t) = v₀ + a·t'
+        ]
+      },
+      projectile: {
+        id: 'projectile',
+        category: 'Kinematics • Ballistics & Gravity',
+        title: 'Gravity & Projectile Trajectory',
+        keywords: ['gravity', 'projectile', 'trajectory', 'parabola', 'launch', 'angle', 'velocity', 'range', 'height', 'earth', 'moon', 'mars', 'kinematics'],
+        legend: [
+          { color: 'bg-amber-400', label: 'Trajectory Path' },
+          { color: 'bg-emerald-400', label: 'Horizontal v_x' },
+          { color: 'bg-sky-400', label: 'Vertical v_y' }
+        ],
+        steps: {
+          1: {
+            heading: 'Step 1: Launch Vector Decomposition',
+            body: 'A projectile launches at speed <strong>v₀</strong> and elevation angle <strong>θ</strong>. Its initial velocity splits into two independent perpendicular components: horizontal <strong>vₓ = v₀·cos(θ)</strong> and vertical <strong>vᵧ = v₀·sin(θ)</strong>.'
+          },
+          2: {
+            heading: 'Step 2: Parabolic Flight Under Constant Gravity',
+            body: 'In flight, horizontal speed <strong>vₓ</strong> stays constant (green arrow), while downward gravity <strong>g</strong> continuously reduces vertical velocity <strong>vᵧ</strong> (blue arrow) until <strong>vᵧ = 0</strong> at peak height, then accelerates it downward.'
+          },
+          3: {
+            heading: 'Step 3: Peak Height, Flight Time & Range Equations',
+            body: 'Maximum height is <strong>H = (v₀²·sin²θ) / (2g)</strong> and horizontal range is <strong>R = (v₀²·sin 2θ) / g</strong>. Switching gravity from Earth (9.81) to Moon (1.62) stretches the trajectory 6× farther!'
+          }
+        },
+        formulas: [
+          'vₓ = v₀ · cos(θ)   |   vᵧ(t) = v₀ · sin(θ) − g·t',
+          'T_flight = (2 · v₀ · sin(θ)) / g',
+          'H_max = (v₀² · sin²(θ)) / (2 · g)',
+          'Range R = (v₀² · sin(2θ)) / g'
+        ]
+      }
+    };
+
+    // =========================================================================
+    // 2. APPLICATION STATE
+    // =========================================================================
+    const state = {
+      activeModule: 'beam',
+      activeStep: 1,
+      isPlaying: true,
+      time: 0,
+
+      // Module 1: Simply Supported Beam parameters
+      beam: {
+        P: 40,     // Point Load in kN (5 to 100)
+        xRatio: 0.5, // Normalized position x/L (0.1 to 0.9)
+        L: 8.0     // Span in meters (4 to 12)
+      },
+
+      // Module 2: Newton's Laws parameters
+      newton: {
+        F: 65,     // Applied Force in N (0 to 150)
+        m: 10,     // Mass in kg (2 to 30)
+        mu: 0.30,  // Friction coefficient (0.0 to 0.8)
+        posX: -5,  // Current X position on track
+        vel: 0     // Current velocity m/s
+      },
+
+      // Module 3: Gravity & Projectile parameters
+      projectile: {
+        v0: 24,      // Launch velocity m/s (10 to 40)
+        angle: 45,   // Launch angle degrees (15 to 80)
+        gravity: 9.81, // m/s^2 (Earth 9.81, Mars 3.72, Moon 1.62)
+        planet: 'Earth',
+        flightTime: 0
+      },
+
+      // Custom Orbit Camera spherical coordinates
+      camera: {
+        theta: 0.45,
+        phi: 1.12,
+        radius: 14,
+        target: new THREE.Vector3(0, 1.0, 0),
+        isDragging: false,
+        prevX: 0,
+        prevY: 0,
+        pinchDist: 0
+      }
+    };
+
+    // =========================================================================
+    // 3. THREE.JS SCENE SETUP & CUSTOM ORBIT CONTROLS
+    // =========================================================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x080c16, 0.022);
+
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    // Lighting Setup
+    const ambientLight = new THREE.AmbientLight(0xdbeafe, 0.65);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.95);
+    dirLight.position.set(10, 18, 12);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    scene.add(dirLight);
+
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.45);
+    rimLight.position.set(-12, 8, -10);
+    scene.add(rimLight);
+
+    // Subtle Engineering Reference Grid
+    const gridHelper = new THREE.GridHelper(36, 36, 0x1e293b, 0x111827);
+    gridHelper.position.y = -0.01;
+    scene.add(gridHelper);
+
+    // Scene Root Groups for each module
+    const beamGroup = new THREE.Group();
+    const newtonGroup = new THREE.Group();
+    const projectileGroup = new THREE.Group();
+    scene.add(beamGroup);
+    scene.add(newtonGroup);
+    scene.add(projectileGroup);
+
+    function updateCameraPosition() {
+      const { theta, phi, radius, target } = state.camera;
+      const clampedPhi = Math.max(0.25, Math.min(Math.PI / 2 - 0.04, phi));
+      state.camera.phi = clampedPhi;
+      camera.position.x = target.x + radius * Math.sin(clampedPhi) * Math.sin(theta);
+      camera.position.y = target.y + radius * Math.cos(clampedPhi);
+      camera.position.z = target.z + radius * Math.sin(clampedPhi) * Math.cos(theta);
+      camera.lookAt(target);
+    }
+
+    // Mouse & Touch Orbit Interaction
+    container.addEventListener('mousedown', (e) => {
+      state.camera.isDragging = true;
+      state.camera.prevX = e.clientX;
+      state.camera.prevY = e.clientY;
+    });
+    window.addEventListener('mouseup', () => {
+      state.camera.isDragging = false;
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!state.camera.isDragging) return;
+      const dx = e.clientX - state.camera.prevX;
+      const dy = e.clientY - state.camera.prevY;
+      state.camera.prevX = e.clientX;
+      state.camera.prevY = e.clientY;
+      state.camera.theta -= dx * 0.008;
+      state.camera.phi -= dy * 0.008;
+      updateCameraPosition();
+    });
+    container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      state.camera.radius = Math.max(6, Math.min(32, state.camera.radius + e.deltaY * 0.01));
+      updateCameraPosition();
+    }, { passive: false });
+
+    // Touch support (1-finger orbit, 2-finger pinch zoom)
+    container.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        state.camera.isDragging = true;
+        state.camera.prevX = e.touches[0].clientX;
+        state.camera.prevY = e.touches[0].clientY;
+      } else if (e.touches.length === 2) {
+        state.camera.isDragging = false;
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        state.camera.pinchDist = Math.hypot(dx, dy);
+      }
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1 && state.camera.isDragging) {
+        const dx = e.touches[0].clientX - state.camera.prevX;
+        const dy = e.touches[0].clientY - state.camera.prevY;
+        state.camera.prevX = e.touches[0].clientX;
+        state.camera.prevY = e.touches[0].clientY;
+        state.camera.theta -= dx * 0.009;
+        state.camera.phi -= dy * 0.009;
+        updateCameraPosition();
+      } else if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        const delta = state.camera.pinchDist - dist;
+        state.camera.pinchDist = dist;
+        state.camera.radius = Math.max(6, Math.min(32, state.camera.radius + delta * 0.04));
+        updateCameraPosition();
+      }
+    }, { passive: true });
+
+    container.addEventListener('touchend', () => {
+      state.camera.isDragging = false;
+    });
+
+    // Helper: Create 3D Arrow Mesh (Shaft + Cone Head)
+    function create3DArrow(colorHex) {
+      const group = new THREE.Group();
+      const mat = new THREE.MeshStandardMaterial({
+        color: colorHex,
+        emissive: colorHex,
+        emissiveIntensity: 0.25,
+        roughness: 0.3
+      });
+      const shaftGeo = new THREE.CylinderGeometry(0.08, 0.08, 1, 16);
+      shaftGeo.translate(0, 0.5, 0);
+      const shaft = new THREE.Mesh(shaftGeo, mat);
+
+      const headGeo = new THREE.ConeGeometry(0.22, 0.45, 20);
+      headGeo.translate(0, 0.225, 0);
+      const head = new THREE.Mesh(headGeo, mat);
+
+      group.add(shaft);
+      group.add(head);
+      group.userData = { shaft, head, mat };
+      return group;
+    }
+
+    function setArrowLength(arrow, length) {
+      const clamped = Math.max(0.01, length);
+      const headLen = Math.min(0.45, clamped * 0.4);
+      const shaftLen = Math.max(0.01, clamped - headLen);
+      arrow.userData.shaft.scale.set(1, shaftLen, 1);
+      arrow.userData.head.position.y = shaftLen;
+      arrow.userData.head.scale.set(1, headLen / 0.45, 1);
+    }
+
+    // =========================================================================
+    // 4. MODULE 1 BUILDER: SIMPLY SUPPORTED BEAM & BENDING MOMENT
+    // =========================================================================
+    const beamObjs = {};
+    function initBeamScene() {
+      // High-resolution segmented box geometry so we can deform vertices smoothly
+      // and apply vertex colors for compression (top) vs tension (bottom)
+      const segsX = 64;
+      const segsY = 6;
+      const segsZ = 4;
+      const geo = new THREE.BoxGeometry(10, 0.65, 0.9, segsX, segsY, segsZ);
+
+      // Initialize vertex colors
+      const count = geo.attributes.position.count;
+      const colors = new Float32Array(count * 3);
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      geo.userData.basePositions = Float32Array.from(geo.attributes.position.array);
+
+      const mat = new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.35,
+        metalness: 0.2
+      });
+      const beamMesh = new THREE.Mesh(geo, mat);
+      beamMesh.castShadow = true;
+      beamMesh.position.y = 1.6;
+      beamGroup.add(beamMesh);
+      beamObjs.mesh = beamMesh;
+
+      // Left Pin Support (Triangle Prism + Base)
+      const pinGroup = new THREE.Group();
+      const coneGeo = new THREE.ConeGeometry(0.55, 0.9, 4);
+      coneGeo.rotateY(Math.PI / 4);
+      const supportMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.5, roughness: 0.4 });
+      const pinCone = new THREE.Mesh(coneGeo, supportMat);
+      pinCone.position.y = 0.82;
+      const basePlate = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.22, 1.3), supportMat);
+      basePlate.position.y = 0.26;
+      pinGroup.add(pinCone, basePlate);
+      beamGroup.add(pinGroup);
+      beamObjs.pinSupport = pinGroup;
+
+      // Right Roller Support (Triangle + Cylindrical Rollers + Base)
+      const rollerGroup = new THREE.Group();
+      const rollerTop = new THREE.Mesh(coneGeo, supportMat);
+      rollerTop.position.y = 0.92;
+      const wheelMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.6, roughness: 0.3 });
+      const wheel1 = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 1.0, 16), wheelMat);
+      wheel1.rotation.x = Math.PI / 2;
+      wheel1.position.set(-0.25, 0.38, 0);
+      const wheel2 = wheel1.clone();
+      wheel2.position.x = 0.25;
+      const rollerBase = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.2, 1.3), supportMat);
+      rollerBase.position.y = 0.14;
+      rollerGroup.add(rollerTop, wheel1, wheel2, rollerBase);
+      beamGroup.add(rollerGroup);
+      beamObjs.rollerSupport = rollerGroup;
+
+      // Downward Point Load Arrow (Amber)
+      const loadArrow = create3DArrow(0xf59e0b);
+      loadArrow.rotation.z = Math.PI; // Points downward
+      beamGroup.add(loadArrow);
+      beamObjs.loadArrow = loadArrow;
+
+      // Upward Reaction Force Arrows R1 & R2 (Emerald)
+      const r1Arrow = create3DArrow(0x10b981);
+      const r2Arrow = create3DArrow(0x10b981);
+      beamGroup.add(r1Arrow, r2Arrow);
+      beamObjs.r1Arrow = r1Arrow;
+      beamObjs.r2Arrow = r2Arrow;
+    }
+
+    function updateBeamSimulation(dt) {
+      const { P, xRatio, L } = state.beam;
+      const x = xRatio * L;
+      const R1 = (P * (L - x)) / L;
+      const R2 = (P * x) / L;
+      const Mmax = (P * x * (L - x)) / L;
+
+      // Map span L (4..12m) to 3D world width (6..11 units)
+      const visualSpan = 5.5 + (L - 4) * 0.68;
+      const halfSpan = visualSpan / 2;
+
+      // Position supports at ends of visualSpan
+      beamObjs.pinSupport.position.x = -halfSpan;
+      beamObjs.rollerSupport.position.x = halfSpan;
+
+      // Compute exact Euler-Bernoulli deflection shape along beam:
+      // y(u) normalized so peak visual sag scales cleanly with Mmax
+      const a = xRatio;
+      const b = 1 - xRatio;
+      // Subtle breathing pulse when playing so student sees load action
+      const pulse = state.isPlaying ? (0.94 + 0.06 * Math.sin(state.time * 3.2)) : 1.0;
+      const maxVisualSag = Math.min(1.45, (Mmax / 180) * 1.35) * pulse;
+
+      // Normalized peak factor at u = a: a^2 * b^2 / 3
+      const peakFactor = Math.max(0.0001, (a * a * b * b) / 3);
+
+      const geo = beamObjs.mesh.geometry;
+      const posAttr = geo.attributes.position;
+      const colAttr = geo.attributes.color;
+      const base = geo.userData.basePositions;
+
+      for (let i = 0; i < posAttr.count; i++) {
+        const bx = base[i * 3];     // -5 to +5
+        const by = base[i * 3 + 1]; // -0.325 to +0.325
+        const bz = base[i * 3 + 2];
+
+        // Normalized position u in [0, 1]
+        const u = (bx + 5) / 10;
+        const scaledX = (u - 0.5) * visualSpan;
+
+        // Exact piecewise cubic deflection curve for point load at u = a
+        let shape = 0;
+        if (u <= a) {
+          shape = (b * u * (1 - b * b - u * u)) / 6;
+        } else {
+          const uRev = 1 - u;
+          shape = (a * uRev * (1 - a * a - uRev * uRev)) / 6;
+        }
+        const deflection = (shape / peakFactor) * maxVisualSag;
+
+        posAttr.setXYZ(i, scaledX, by - deflection, bz);
+
+        // Local bending moment ratio at u (triangular peaking at u = a)
+        const momentRatio = u <= a ? (u / Math.max(0.01, a)) : ((1 - u) / Math.max(0.01, b));
+        const stressIntensity = Math.min(1, (Mmax / 150) * momentRatio);
+
+        // Step 1 highlights neutral blue-slate; Step 2 & 3 highlight Compression (Red) & Tension (Cyan)
+        if (state.activeStep === 1) {
+          colAttr.setXYZ(i, 0.35, 0.48, 0.65);
+        } else {
+          // Top fibers (by > 0) = Compression (warm crimson/orange), Bottom fibers (by < 0) = Tension (electric sky blue)
+          const fiberNorm = by / 0.325; // -1 to +1
+          if (fiberNorm > 0.05) {
+            const t = fiberNorm * stressIntensity;
+            colAttr.setXYZ(i, 0.35 + 0.65 * t, 0.45 - 0.30 * t, 0.60 - 0.45 * t);
+          } else if (fiberNorm < -0.05) {
+            const t = Math.abs(fiberNorm) * stressIntensity;
+            colAttr.setXYZ(i, 0.35 - 0.25 * t, 0.45 + 0.38 * t, 0.60 + 0.40 * t);
+          } else {
+            // Neutral axis stays neutral gray-white
+            colAttr.setXYZ(i, 0.75, 0.80, 0.88);
+          }
+        }
+      }
+      posAttr.needsUpdate = true;
+      colAttr.needsUpdate = true;
+      geo.computeVertexNormals();
+
+      // Position & scale Load Arrow P directly on top of deflected beam at u = a
+      const loadWorldX = (xRatio - 0.5) * visualSpan;
+      const loadTipY = 1.6 + 0.34 - maxVisualSag;
+      const loadLen = 0.8 + (P / 100) * 1.6;
+      beamObjs.loadArrow.position.set(loadWorldX, loadTipY + loadLen, 0);
+      setArrowLength(beamObjs.loadArrow, loadLen);
+
+      // Position & scale Reaction Arrows R1, R2
+      const r1Len = 0.4 + (R1 / 100) * 1.4;
+      const r2Len = 0.4 + (R2 / 100) * 1.4;
+      beamObjs.r1Arrow.position.set(-halfSpan, 0.1, 0.85);
+      setArrowLength(beamObjs.r1Arrow, r1Len);
+      beamObjs.r2Arrow.position.set(halfSpan, 0.1, 0.85);
+      setArrowLength(beamObjs.r2Arrow, r2Len);
+
+      // Step visibility emphasis
+      beamObjs.loadArrow.visible = state.activeStep >= 2;
+      beamObjs.r1Arrow.visible = state.activeStep >= 2;
+      beamObjs.r2Arrow.visible = state.activeStep >= 2;
+
+      // Update SFD & BMD 2D Canvases
+      drawBeamDiagrams(L, x, P, R1, R2, Mmax);
+    }
+
+    function drawBeamDiagrams(L, x, P, R1, R2, Mmax) {
+      const sfdCanvas = document.getElementById('sfd-canvas');
+      const bmdCanvas = document.getElementById('bmd-canvas');
+      if (!sfdCanvas || !bmdCanvas) return;
+
+      // Resize canvas crisp to container
+      [sfdCanvas, bmdCanvas].forEach((c) => {
+        const rect = c.getBoundingClientRect();
+        if (rect.width > 0 && (c.width !== Math.floor(rect.width * 2) || c.height !== Math.floor(rect.height * 2))) {
+          c.width = Math.floor(rect.width * 2);
+          c.height = Math.floor(rect.height * 2);
+        }
+      });
+
+      // --- 1. SHEAR FORCE DIAGRAM (SFD) ---
+      const ctxS = sfdCanvas.getContext('2d');
+      const w = sfdCanvas.width;
+      const h = sfdCanvas.height;
+      ctxS.clearRect(0, 0, w, h);
+
+      const padX = 24;
+      const usableW = w - padX * 2;
+      const midY = h / 2;
+      const loadX = padX + (x / L) * usableW;
+      const maxScaleV = 100; // max possible P
+      const yR1 = midY - (R1 / maxScaleV) * (h * 0.38);
+      const yR2 = midY + (R2 / maxScaleV) * (h * 0.38);
+
+      // Zero baseline
+      ctxS.strokeStyle = '#334155';
+      ctxS.lineWidth = 2;
+      ctxS.beginPath();
+      ctxS.moveTo(padX, midY);
+      ctxS.lineTo(w - padX, midY);
+      ctxS.stroke();
+
+      // Positive Shear Fill (+R1)
+      ctxS.fillStyle = 'rgba(16, 185, 129, 0.22)';
+      ctxS.fillRect(padX, yR1, loadX - padX, midY - yR1);
+
+      // Negative Shear Fill (-R2)
+      ctxS.fillStyle = 'rgba(244, 63, 94, 0.22)';
+      ctxS.fillRect(loadX, midY, (w - padX) - loadX, yR2 - midY);
+
+      // SFD Outline
+      ctxS.strokeStyle = '#10b981';
+      ctxS.lineWidth = 3;
+      ctxS.beginPath();
+      ctxS.moveTo(padX, midY);
+      ctxS.lineTo(padX, yR1);
+      ctxS.lineTo(loadX, yR1);
+      ctxS.lineTo(loadX, yR2);
+      ctxS.lineTo(w - padX, yR2);
+      ctxS.lineTo(w - padX, midY);
+      ctxS.stroke();
+
+      // Labels
+      ctxS.fillStyle = '#a7f3d0';
+      ctxS.font = 'bold 20px JetBrains Mono, monospace';
+      ctxS.fillText(`+${R1.toFixed(1)} kN`, padX + 6, Math.max(22, yR1 - 6));
+      ctxS.fillStyle = '#fecdd3';
+      ctxS.fillText(`-${R2.toFixed(1)} kN`, loadX + 6, Math.min(h - 8, yR2 + 20));
+
+      // --- 2. BENDING MOMENT DIAGRAM (BMD) ---
+      const ctxB = bmdCanvas.getContext('2d');
+      ctxB.clearRect(0, 0, w, h);
+      const topY = 22;
+      const baseB = h - 22;
+      const peakY = baseB - Math.min(1, Mmax / 220) * (baseB - topY);
+
+      // Baseline
+      ctxB.strokeStyle = '#334155';
+      ctxB.lineWidth = 2;
+      ctxB.beginPath();
+      ctxB.moveTo(padX, baseB);
+      ctxB.lineTo(w - padX, baseB);
+      ctxB.stroke();
+
+      // Triangle Fill
+      ctxB.fillStyle = 'rgba(245, 158, 11, 0.25)';
+      ctxB.beginPath();
+      ctxB.moveTo(padX, baseB);
+      ctxB.lineTo(loadX, peakY);
+      ctxB.lineTo(w - padX, baseB);
+      ctxB.closePath();
+      ctxB.fill();
+
+      // BMD Stroke
+      ctxB.strokeStyle = '#f59e0b';
+      ctxB.lineWidth = 3;
+      ctxB.beginPath();
+      ctxB.moveTo(padX, baseB);
+      ctxB.lineTo(loadX, peakY);
+      ctxB.lineTo(w - padX, baseB);
+      ctxB.stroke();
+
+      // Peak Dot & Label
+      ctxB.fillStyle = '#fbbf24';
+      ctxB.beginPath();
+      ctxB.arc(loadX, peakY, 5, 0, Math.PI * 2);
+      ctxB.fill();
+      ctxB.font = 'bold 20px JetBrains Mono, monospace';
+      const labelX = Math.min(w - 155, Math.max(padX + 6, loadX - 50));
+      ctxB.fillText(`M_max: ${Mmax.toFixed(1)} kN·m`, labelX, Math.max(20, peakY - 10));
+    }
+
+    // =========================================================================
+    // 5. MODULE 2 BUILDER: NEWTON'S LAWS & FREE-BODY DYNAMICS
+    // =========================================================================
+    const newtonObjs = {};
+    function initNewtonScene() {
+      // Track surface
+      const trackGeo = new THREE.BoxGeometry(24, 0.3, 4.5);
+      const trackMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 });
+      const track = new THREE.Mesh(trackGeo, trackMat);
+      track.position.y = -0.15;
+      track.receiveShadow = true;
+      newtonGroup.add(track);
+
+      // Distance tick markers along the track
+      const tickMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+      for (let x = -10; x <= 10; x += 2) {
+        const tick = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 3.8), tickMat);
+        tick.position.set(x, 0.01, 0);
+        newtonGroup.add(tick);
+      }
+
+      // Dynamic Mass Block
+      const blockGeo = new THREE.BoxGeometry(1.8, 1.4, 1.8);
+      const blockMat = new THREE.MeshStandardMaterial({
+        color: 0x3b82f6,
+        metalness: 0.35,
+        roughness: 0.3
+      });
+      const block = new THREE.Mesh(blockGeo, blockMat);
+      block.castShadow = true;
+      block.position.set(-5, 0.7, 0);
+      newtonGroup.add(block);
+      newtonObjs.block = block;
+
+      // 4 Free-Body Force Arrows attached to Block
+      const fApplied = create3DArrow(0x10b981); // Emerald right (+X)
+      fApplied.rotation.z = -Math.PI / 2;
+
+      const fFriction = create3DArrow(0xf43f5e); // Crimson left (-X)
+      fFriction.rotation.z = Math.PI / 2;
+
+      const fNormal = create3DArrow(0x38bdf8);   // Sky blue up (+Y)
+
+      const fGravity = create3DArrow(0xf59e0b);  // Amber down (-Y)
+      fGravity.rotation.z = Math.PI;
+
+      block.add(fApplied, fFriction, fNormal, fGravity);
+      newtonObjs.fApplied = fApplied;
+      newtonObjs.fFriction = fFriction;
+      newtonObjs.fNormal = fNormal;
+      newtonObjs.fGravity = fGravity;
+    }
+
+    function updateNewtonSimulation(dt) {
+      const { F, m, mu } = state.newton;
+      const g = 9.81;
+      const N = m * g;
+      const fMax = mu * N;
+      const fActual = F <= fMax ? F : fMax;
+      const fNet = Math.max(0, F - fMax);
+      const accel = fNet / m;
+
+      // Scale block subtly with mass m (2..30 kg)
+      const scaleFactor = 0.75 + (m / 30) * 0.65;
+      newtonObjs.block.scale.set(scaleFactor, scaleFactor, scaleFactor);
+      newtonObjs.block.position.y = 0.7 * scaleFactor;
+
+      // Update kinetic motion if playing and Step >= 2
+      if (state.isPlaying && state.activeStep >= 2) {
+        if (accel > 0.001) {
+          state.newton.vel += accel * dt * 0.45;
+          state.newton.posX += state.newton.vel * dt;
+          if (state.newton.posX > 9.5) {
+            state.newton.posX = -9.5;
+            state.newton.vel = Math.min(state.newton.vel, 4.5);
+          }
+        } else {
+          // Decelerate smoothly if friction exceeds applied force
+          state.newton.vel = Math.max(0, state.newton.vel - 4 * dt);
+          state.newton.posX += state.newton.vel * dt;
+        }
+      }
+      newtonObjs.block.position.x = state.newton.posX;
+
+      // Update Free-Body Vector Arrows
+      const showForces = state.activeStep >= 2;
+      newtonObjs.fApplied.visible = showForces && F > 0;
+      newtonObjs.fFriction.visible = showForces && fActual > 0;
+      newtonObjs.fNormal.visible = true;
+      newtonObjs.fGravity.visible = true;
+
+      newtonObjs.fApplied.position.set(0.9, 0, 0);
+      setArrowLength(newtonObjs.fApplied, 0.3 + (F / 150) * 2.4);
+
+      newtonObjs.fFriction.position.set(-0.9, -0.45, 0);
+      setArrowLength(newtonObjs.fFriction, 0.3 + (fActual / 150) * 2.4);
+
+      const vertLen = 0.5 + (N / 300) * 1.6;
+      newtonObjs.fNormal.position.set(0, 0.7, 0);
+      setArrowLength(newtonObjs.fNormal, vertLen);
+
+      newtonObjs.fGravity.position.set(0, -0.7, 0);
+      setArrowLength(newtonObjs.fGravity, vertLen);
+    }
+
+    // =========================================================================
+    // 6. MODULE 3 BUILDER: GRAVITY & PROJECTILE TRAJECTORY
+    // =========================================================================
+    const projObjs = {};
+    function initProjectileScene() {
+      // Ground landing strip
+      const ground = new THREE.Mesh(
+        new THREE.BoxGeometry(28, 0.25, 5),
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 })
+      );
+      ground.position.set(2, -0.125, 0);
+      projectileGroup.add(ground);
+
+      // Launch Cannon / Platform at x = -9
+      const base = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.65, 0.85, 0.5, 24),
+        new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.5, roughness: 0.4 })
+      );
+      base.position.set(-9, 0.25, 0);
+      projectileGroup.add(base);
+
+      const barrelPivot = new THREE.Group();
+      barrelPivot.position.set(-9, 0.55, 0);
+      const barrelGeo = new THREE.CylinderGeometry(0.22, 0.26, 1.5, 20);
+      barrelGeo.rotateZ(-Math.PI / 2);
+      barrelGeo.translate(0.65, 0, 0);
+      const barrel = new THREE.Mesh(
+        barrelGeo,
+        new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.6, roughness: 0.25 })
+      );
+      barrelPivot.add(barrel);
+      projectileGroup.add(barrelPivot);
+      projObjs.barrelPivot = barrelPivot;
+
+      // Projectile Sphere
+      const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(0.32, 24, 24),
+        new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.35 })
+      );
+      projectileGroup.add(sphere);
+      projObjs.sphere = sphere;
+
+      // Live Velocity Component Vectors (vx emerald, vy sky blue)
+      const vxArrow = create3DArrow(0x10b981);
+      vxArrow.rotation.z = -Math.PI / 2;
+      const vyArrow = create3DArrow(0x38bdf8);
+      sphere.add(vxArrow, vyArrow);
+      projObjs.vxArrow = vxArrow;
+      projObjs.vyArrow = vyArrow;
+
+      // Parabolic Trajectory Preview Line
+      const lineGeo = new THREE.BufferGeometry();
+      const maxPts = 80;
+      lineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxPts * 3), 3));
+      const lineMat = new THREE.LineBasicMaterial({ color: 0xfbbf24, linewidth: 2 });
+      const trajectoryLine = new THREE.Line(lineGeo, lineMat);
+      projectileGroup.add(trajectoryLine);
+      projObjs.trajectoryLine = trajectoryLine;
+      projObjs.maxPts = maxPts;
+    }
+
+    function updateProjectileSimulation(dt) {
+      const { v0, angle, gravity } = state.projectile;
+      const rad = (angle * Math.PI) / 180;
+      const vx = v0 * Math.cos(rad);
+      const vy0 = v0 * Math.sin(rad);
+
+      const tTotal = (2 * vy0) / gravity;
+      const hMax = (vy0 * vy0) / (2 * gravity);
+      const range = vx * tTotal;
+
+      // Scale real meters cleanly into our 20-unit visual arena
+      // Max theoretical range on Moon (v0=40, 45deg, g=1.62) is ~987m; Earth max is ~163m
+      const worldScale = range > 180 ? (19 / range) : 0.12;
+      const startX = -9;
+      const startY = 0.55;
+
+      // Rotate launch barrel
+      projObjs.barrelPivot.rotation.z = rad;
+
+      // Update Parabolic Trajectory Curve
+      const posAttr = projObjs.trajectoryLine.geometry.attributes.position;
+      for (let i = 0; i < projObjs.maxPts; i++) {
+        const frac = i / (projObjs.maxPts - 1);
+        const t = frac * tTotal;
+        const px = startX + vx * t * worldScale;
+        const py = Math.max(0.15, startY + (vy0 * t - 0.5 * gravity * t * t) * worldScale);
+        posAttr.setXYZ(i, px, py, 0);
+      }
+      posAttr.needsUpdate = true;
+
+      // Advance flight clock
+      if (state.isPlaying && state.activeStep >= 2) {
+        state.projectile.flightTime += dt * 1.15;
+        if (state.projectile.flightTime > tTotal + 0.45) {
+          state.projectile.flightTime = 0;
+        }
+      }
+
+      const tCur = state.activeStep === 1 ? 0 : Math.min(tTotal, state.projectile.flightTime);
+      const curX = startX + vx * tCur * worldScale;
+      const curY = startY + (vy0 * tCur - 0.5 * gravity * tCur * tCur) * worldScale;
+      const curVy = vy0 - gravity * tCur;
+
+      projObjs.sphere.position.set(curX, Math.max(0.32, curY), 0);
+
+      // Update vx and vy vectors on sphere
+      projObjs.vxArrow.visible = true;
+      setArrowLength(projObjs.vxArrow, 0.3 + (vx / 40) * 1.8);
+
+      projObjs.vyArrow.visible = Math.abs(curVy) > 0.3;
+      projObjs.vyArrow.rotation.z = curVy >= 0 ? 0 : Math.PI;
+      setArrowLength(projObjs.vyArrow, 0.25 + (Math.abs(curVy) / 40) * 1.8);
+    }
+
+    // =========================================================================
+    // 7. UI BUILDER: CONTROLS, METRICS, STEPS & SEARCH
+    // =========================================================================
+    function renderModuleUI() {
+      const mod = MODULES[state.activeModule];
+
+      // 1. Update Viewport Header & Legend
+      document.getElementById('viewport-category').textContent = mod.category;
+      document.getElementById('viewport-title').textContent = mod.title;
+      document.getElementById('viewport-legend').innerHTML = mod.legend
+        .map(item => `<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${item.color} inline-block"></span>${item.label}</span>`)
+        .join('');
+
+      // 2. Toggle Three.js Groups
+      beamGroup.visible = state.activeModule === 'beam';
+      newtonGroup.visible = state.activeModule === 'newton';
+      projectileGroup.visible = state.activeModule === 'projectile';
+
+      // Show/Hide SFD & BMD card
+      document.getElementById('diagrams-card').style.display = state.activeModule === 'beam' ? 'block' : 'none';
+
+      // 3. Render Sliders
+      const controlsEl = document.getElementById('controls-container');
+      if (state.activeModule === 'beam') {
+        const xMeters = (state.beam.xRatio * state.beam.L).toFixed(2);
+        controlsEl.innerHTML = `
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-gray-300 font-medium">Point Load (<span class="font-mono text-amber-400">P</span>)</span>
+              <span id="val-beam-p" class="font-mono font-bold text-white">${state.beam.P} kN</span>
+            </div>
+            <input id="slider-beam-p" type="range" min="5" max="100" step="1" value="${state.beam.P}" />
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-gray-300 font-medium">Load Position (<span class="font-mono text-sky-400">x</span> from left)</span>
+              <span id="val-beam-x" class="font-mono font-bold text-white">${xMeters} m (${Math.round(state.beam.xRatio * 100)}%)</span>
+            </div>
+            <input id="slider-beam-x" type="range" min="0.1" max="0.9" step="0.02" value="${state.beam.xRatio}" />
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-gray-300 font-medium">Beam Span (<span class="font-mono text-emerald-400">L</span>)</span>
+              <span id="val-beam-l" class="font-mono font-bold text-white">${state.beam.L.toFixed(1)} m</span>
+            </div>
+            <input id="slider-beam-l" type="range" min="4" max="12" step="0.5" value="${state.beam.L}" />
+          </div>
+        `;
+
+        document.getElementById('slider-beam-p').addEventListener('input', (e) => {
+          state.beam.P = parseFloat(e.target.value);
+          document.getElementById('val-beam-p').textContent = `${state.beam.P} kN`;
+          updateMetrics();
+        });
+        document.getElementById('slider-beam-x').addEventListener('input', (e) => {
+          state.beam.xRatio = parseFloat(e.target.value);
+          const xm = (state.beam.xRatio * state.beam.L).toFixed(2);
+          document.getElementById('val-beam-x').textContent = `${xm} m (${Math.round(state.beam.xRatio * 100)}%)`;
+          updateMetrics();
+        });
+        document.getElementById('slider-beam-l').addEventListener('input', (e) => {
+          state.beam.L = parseFloat(e.target.value);
+          const xm = (state.beam.xRatio * state.beam.L).toFixed(2);
+          document.getElementById('val-beam-l').textContent = `${state.beam.L.toFixed(1)} m`;
+          document.getElementById('val-beam-x').textContent = `${xm} m (${Math.round(state.beam.xRatio * 100)}%)`;
+          updateMetrics();
+        });
+      } else if (state.activeModule === 'newton') {
+        controlsEl.innerHTML = `
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-gray-300 font-medium">Applied Force (<span class="font-mono text-emerald-400">F</span>)</span>
+              <span id="val-newton-f" class="font-mono font-bold text-white">${state.newton.F} N</span>
+            </div>
+            <input id="slider-newton-f" type="range" min="0" max="150" step="1" value="${state.newton.F}" />
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-gray-300 font-medium">Block Mass (<span class="font-mono text-sky-400">m</span>)</span>
+              <span id="val-newton-m" class="font-mono font-bold text-white">${state.newton.m} kg</span>
+            </div>
+            <input id="slider-newton-m" type="range" min="2" max="30" step="1" value="${state.newton.m}" />
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-gray-300 font-medium">Friction Coefficient (<span class="font-mono text-rose-400">μ</span>)</span>
+              <span id="val-newton-mu" class="font-mono font-bold text-white">${state.newton.mu.toFixed(2)}</span>
+            </div>
+            <input id="slider-newton-mu" type="range" min="0" max="0.8" step="0.02" value="${state.newton.mu}" />
+          </div>
+        `;
+
+        document.getElementById('slider-newton-f').addEventListener('input', (e) => {
+          state.newton.F = parseFloat(e.target.value);
+          document.getElementById('val-newton-f').textContent = `${state.newton.F} N`;
+          updateMetrics();
+        });
+        document.getElementById('slider-newton-m').addEventListener('input', (e) => {
+          state.newton.m = parseFloat(e.target.value);
+          document.getElementById('val-newton-m').textContent = `${state.newton.m} kg`;
+          updateMetrics();
+        });
+        document.getElementById('slider-newton-mu').addEventListener('input', (e) => {
+          state.newton.mu = parseFloat(e.target.value);
+          document.getElementById('val-newton-mu').textContent = state.newton.mu.toFixed(2);
+          updateMetrics();
+        });
+      } else if (state.activeModule === 'projectile') {
+        controlsEl.innerHTML = `
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-gray-300 font-medium">Launch Velocity (<span class="font-mono text-amber-400">v₀</span>)</span>
+              <span id="val-proj-v0" class="font-mono font-bold text-white">${state.projectile.v0} m/s</span>
+            </div>
+            <input id="slider-proj-v0" type="range" min="10" max="40" step="1" value="${state.projectile.v0}" />
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-gray-300 font-medium">Launch Angle (<span class="font-mono text-sky-400">θ</span>)</span>
+              <span id="val-proj-angle" class="font-mono font-bold text-white">${state.projectile.angle}°</span>
+            </div>
+            <input id="slider-proj-angle" type="range" min="15" max="80" step="1" value="${state.projectile.angle}" />
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-gray-300 font-medium">Gravity Environment (<span class="font-mono text-emerald-400">g</span>)</span>
+              <span id="val-proj-g" class="font-mono font-bold text-white">${state.projectile.planet} (${state.projectile.gravity} m/s²)</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5 mt-1">
+              <button data-g="9.81" data-planet="Earth" class="planet-btn py-1.5 rounded-lg text-xs font-semibold border ${state.projectile.planet === 'Earth' ? 'bg-sky-500/20 text-sky-300 border-sky-400' : 'bg-slatebg text-gray-300 border-gray-700'}">Earth (9.81)</button>
+              <button data-g="3.72" data-planet="Mars" class="planet-btn py-1.5 rounded-lg text-xs font-semibold border ${state.projectile.planet === 'Mars' ? 'bg-sky-500/20 text-sky-300 border-sky-400' : 'bg-slatebg text-gray-300 border-gray-700'}">Mars (3.72)</button>
+              <button data-g="1.62" data-planet="Moon" class="planet-btn py-1.5 rounded-lg text-xs font-semibold border ${state.projectile.planet === 'Moon' ? 'bg-sky-500/20 text-sky-300 border-sky-400' : 'bg-slatebg text-gray-300 border-gray-700'}">Moon (1.62)</button>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('slider-proj-v0').addEventListener('input', (e) => {
+          state.projectile.v0 = parseFloat(e.target.value);
+          document.getElementById('val-proj-v0').textContent = `${state.projectile.v0} m/s`;
+          updateMetrics();
+        });
+        document.getElementById('slider-proj-angle').addEventListener('input', (e) => {
+          state.projectile.angle = parseFloat(e.target.value);
+          document.getElementById('val-proj-angle').textContent = `${state.projectile.angle}°`;
+          updateMetrics();
+        });
+        document.querySelectorAll('.planet-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.projectile.gravity = parseFloat(btn.dataset.g);
+            state.projectile.planet = btn.dataset.planet;
+            state.projectile.flightTime = 0;
+            renderModuleUI();
+          });
+        });
+      }
+
+      // 4. Render Governing Formulas
+      document.getElementById('formula-box').innerHTML = mod.formulas
+        .map(f => `<div>• ${f}</div>`)
+        .join('');
+
+      updateStepUI();
+      updateMetrics();
+    }
+
+    function updateMetrics() {
+      const grid = document.getElementById('metrics-grid');
+      if (state.activeModule === 'beam') {
+        const { P, xRatio, L } = state.beam;
+        const x = xRatio * L;
+        const R1 = (P * (L - x)) / L;
+        const R2 = (P * x) / L;
+        const Vmax = Math.max(R1, R2);
+        const Mmax = (P * x * (L - x)) / L;
+
+        grid.innerHTML = `
+          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
+            <span class="text-[11px] text-gray-400 block">Max Bending Moment</span>
+            <span class="text-sm sm:text-base font-mono font-bold text-amber-400">${Mmax.toFixed(2)} kN·m</span>
+          </div>
+          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
+            <span class="text-[11px] text-gray-400 block">Max Shear Force (V_max)</span>
+            <span class="text-sm sm:text-base font-mono font-bold text-emerald-400">${Vmax.toFixed(2)} kN</span>
+          </div>
+          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
+            <span class="text-[11px] text-gray-400 block">Left Reaction (R₁)</span>
+            <span class="text-sm font-mono font-semibold text-sky-300">${R1.toFixed(2)} kN</span>
+          </div>
+          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
+            <span class="text-[11px] text-gray-400 block">Right Reaction (R₂)</span>
+            <span class="text-sm font-mono font-semibold text-sky-300">${R2.toFixed(2)} kN</span>
+          </div>
+        `;
+      } else if (state.activeModule === 'newton') {
+        const { F, m, mu } = state.newton;
+        const N = m * 9.81;
+        const fMax = mu * N;
+        const fNet = Math.max(0, F - fMax);
+        const a = fNet / m;
+        const status = fNet > 0 ? 'Accelerating' : 'Static Equilibrium';
+
+        grid.innerHTML = `
+          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
+            <span class="text-[11px] text-gray-400 block">Acceleration (a = F_net/m)</span>
+            <span class="text-sm sm:text-base font-mono font-bold text-emerald-400">${a.toFixed(2)} m/s²</span>
+          </div>
+          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
+            <span class="text-[11px] text-gray-400 block">Net Horizontal Force</span>
+            <span class="text-sm sm:text-base font-mono font-bold text-sky-400">${fNet.toFixed(1)} N</span>
+          </div>
+          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
+            <span class="text-[11px] text-gray-400 block">Max Friction (μ·N)</span>
+            <span class="text-sm font-mono font-semibold text-rose-400">${fMax.toFixed(1)} N</span>
+          </div>
+          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
+            <span class="text-[11px] text-gray-400 block">Dynamic State</span>
+            <span class="text-xs font-mono font-semibold text-amber-300">${status}</span>
+          </div>
+        `;
+      } else if (state.activeModule === 'projectile') {
+        const { v0, angle, gravity } = state.projectile;
+        const rad = (angle * Math.PI) / 180;
+        const vx = v0 * Math.cos(rad);
+        const vy = v0 * Math.sin(rad);
+        const tFlight = (2 * vy) / gravity;
+        const hMax = (vy * vy) / (2 * gravity);
+        const range = vx * tFlight;
+
+        grid.innerHTML = `
+          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
+            <span class="text-[11px] text-gray-400 block">Horizontal Range (R)</span>
+            <span class="text-sm sm:text-base font-mono font-bold text-amber-400">${range.toFixed(1)} m</span>
+          </div>
+          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
+            <span class="text-[11px] text-gray-400 block">Max Height (H_max)</span>
+            <span class="text-sm sm:text-base font-mono font-bold text-sky-400">${hMax.toFixed(1)} m</span>
+          </div>
+          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
+            <span class="text-[11px] text-gray-400 block">Velocity (vₓ / vᵧ₀)</span>
+            <span class="text-xs font-mono font-semibold text-emerald-300">${vx.toFixed(1)} / ${vy.toFixed(1)} m/s</span>
+          </div>
+          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
+            <span class="text-[11px] text-gray-400 block">Total Flight Time</span>
+            <span class="text-sm font-mono font-semibold text-gray-200">${tFlight.toFixed(2)} s</span>
+          </div>
+        `;
+      }
+    }
+
+    function updateStepUI() {
+      const mod = MODULES[state.activeModule];
+      const stepData = mod.steps[state.activeStep];
+      document.querySelectorAll('.step-btn').forEach((btn) => {
+        const s = parseInt(btn.dataset.step, 10);
+        if (s === state.activeStep) {
+          btn.className = 'step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition bg-sky-500 text-slate-950';
+        } else {
+          btn.className = 'step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition text-gray-300 hover:text-white';
+        }
+      });
+      document.getElementById('step-content').innerHTML = `
+        <div class="font-bold text-white text-xs sm:text-sm mb-1">${stepData.heading}</div>
+        <div>${stepData.body}</div>
+      `;
+    }
+
+    function switchModule(moduleId) {
+      if (!MODULES[moduleId]) return;
+      state.activeModule = moduleId;
+      state.activeStep = 2; // Start directly in active force visualization
+      state.newton.posX = -5;
+      state.newton.vel = 0;
+      state.projectile.flightTime = 0;
+
+      document.querySelectorAll('.module-btn').forEach((btn) => {
+        if (btn.dataset.module === moduleId) {
+          btn.className = 'module-btn active-tab shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-sky-500/20 text-sky-300 border border-sky-400/50';
+        } else {
+          btn.className = 'module-btn shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-gray-800/80 text-gray-300 border border-gray-700 hover:border-gray-500';
+        }
+      });
+
+      renderModuleUI();
+    }
+
+    // =========================================================================
+    // 8. EVENT LISTENERS (SEARCH, TABS, PLAY/PAUSE, RESET, RESIZE)
+    // =========================================================================
+    document.querySelectorAll('.module-btn').forEach((btn) => {
+      btn.addEventListener('click', () => switchModule(btn.dataset.module));
+    });
+
+    document.querySelectorAll('.step-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.activeStep = parseInt(btn.dataset.step, 10);
+        updateStepUI();
+      });
+    });
+
+    // Keyword Search Engine
+    const searchInput = document.getElementById('topic-search');
+    const clearSearchBtn = document.getElementById('clear-search');
+    const searchResultsEl = document.getElementById('search-results');
+
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      clearSearchBtn.classList.toggle('hidden', q.length === 0);
+
+      if (!q) {
+        searchResultsEl.classList.add('hidden');
+        return;
+      }
+
+      const matches = Object.values(MODULES).filter((m) =>
+        m.title.toLowerCase().includes(q) ||
+        m.category.toLowerCase().includes(q) ||
+        m.keywords.some((kw) => kw.includes(q))
+      );
+
+      if (matches.length === 0) {
+        searchResultsEl.innerHTML = `<div class="text-xs text-gray-400 px-2 py-1.5">No exact match for "${q}". Try: <span class="text-sky-400">bending moment, beam, newton, friction, gravity, projectile</span>.</div>`;
+      } else {
+        searchResultsEl.innerHTML = matches.map((m) => `
+          <button data-select-mod="${m.id}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/90 flex items-center justify-between transition">
+            <div>
+              <div class="text-xs font-bold text-white">${m.title}</div>
+              <div class="text-[11px] text-gray-400">${m.category}</div>
+            </div>
+            <span class="text-xs font-mono text-sky-400">Launch →</span>
+          </button>
+        `).join('');
+      }
+      searchResultsEl.classList.remove('hidden');
+
+      searchResultsEl.querySelectorAll('[data-select-mod]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          switchModule(btn.dataset.selectMod);
+          searchResultsEl.classList.add('hidden');
+          searchInput.value = '';
+          clearSearchBtn.classList.add('hidden');
+        });
+      });
+    });
+
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      clearSearchBtn.classList.add('hidden');
+      searchResultsEl.classList.add('hidden');
+    });
+
+    // Play / Pause & Reset
+    const playPauseBtn = document.getElementById('btn-play-pause');
+    playPauseBtn.addEventListener('click', () => {
+      state.isPlaying = !state.isPlaying;
+      document.getElementById('play-icon').textContent = state.isPlaying ? '⏸' : '▶';
+      document.getElementById('play-label').textContent = state.isPlaying ? 'Pause' : 'Play';
+    });
+
+    function resetSimulation() {
+      state.camera.theta = 0.45;
+      state.camera.phi = 1.12;
+      state.camera.radius = 14;
+      updateCameraPosition();
+
+      state.newton.posX = -5;
+      state.newton.vel = 0;
+      state.projectile.flightTime = 0;
+      state.time = 0;
+      state.isPlaying = true;
+      document.getElementById('play-icon').textContent = '⏸';
+      document.getElementById('play-label').textContent = 'Pause';
+    }
+
+    document.getElementById('btn-reset').addEventListener('click', resetSimulation);
+    document.getElementById('mobile-reset-btn').addEventListener('click', resetSimulation);
+
+    // Responsive Canvas Resize Handler
+    function handleResize() {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (width === 0 || height === 0) return;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height, false);
+    }
+    window.addEventListener('resize', handleResize);
+
+    // =========================================================================
+    // 9. INITIALIZATION & MAIN ANIMATION LOOP (WINDOW ONLOAD)
+    // =========================================================================
+    let lastTime = performance.now();
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const dt = Math.min(0.05, (now - lastTime) / 1000);
+      lastTime = now;
+
+      if (state.isPlaying) {
+        state.time += dt;
+      }
+
+      if (state.activeModule === 'beam') {
+        updateBeamSimulation(dt);
+      } else if (state.activeModule === 'newton') {
+        updateNewtonSimulation(dt);
+      } else if (state.activeModule === 'projectile') {
+        updateProjectileSimulation(dt);
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.onload = function () {
+      initBeamScene();
+      initNewtonScene();
+      initProjectileScene();
+      updateCameraPosition();
+      handleResize();
+      switchModule('beam');
+      lastTime = performance.now();
+      requestAnimationFrame(animate);
+    };
+  </script>
+</body>
+</html>
