@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>EngiVis 3D — Interactive Engineering & Physics Lab</title>
-  <!-- Tailwind CSS for responsive, sleek dark-mode academic layout -->
+  <!-- Tailwind CSS for responsive dark engineering UI -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Three.js r128 CDN for real-time 3D engineering models and simulations -->
+  <!-- Three.js r128 for real-time 3D engineering simulations -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
 
   <script>
     tailwind.config = {
@@ -23,11 +23,12 @@
             mono: ['JetBrains Mono', 'monospace'],
           },
           colors: {
-            slatebg: '#090d16',
-            panel: '#111827',
-            panelBorder: '#1f2937',
-            accent: '#38bdf8',
-            accentWarm: '#f59e0b',
+            labBg: '#070b14',
+            labPanel: '#0f172a',
+            labCard: '#131d33',
+            labBorder: '#1e293b',
+            skyAcc: '#38bdf8',
+            amberAcc: '#f59e0b',
           }
         }
       }
@@ -42,17 +43,21 @@
     html, body {
       margin: 0;
       padding: 0;
-      background-color: #090d16;
-      color: #f3f4f6;
+      background-color: #070b14;
+      color: #f1f5f9;
       overflow-x: hidden;
     }
-    /* Custom range slider styling for crisp mobile & desktop control */
+    sub, sup {
+      line-height: 0;
+      font-size: 72%;
+    }
+    /* Custom range slider */
     input[type="range"] {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
       height: 6px;
-      background: #1f2937;
+      background: #1e293b;
       border-radius: 999px;
       outline: none;
     }
@@ -64,8 +69,8 @@
       border-radius: 50%;
       background: #38bdf8;
       cursor: pointer;
-      border: 2px solid #090d16;
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+      border: 2px solid #070b14;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.55);
       transition: transform 0.15s ease;
     }
     input[type="range"]::-webkit-slider-thumb:hover {
@@ -77,7 +82,7 @@
       border-radius: 50%;
       background: #38bdf8;
       cursor: pointer;
-      border: 2px solid #090d16;
+      border: 2px solid #070b14;
     }
     #canvas-container {
       position: relative;
@@ -89,117 +94,133 @@
     #canvas-container:active {
       cursor: grabbing;
     }
-    canvas {
+    canvas.webgl-canvas {
       display: block;
       width: 100%;
       height: 100%;
     }
-    /* Subtle scrollbar for controls panel */
+    /* Scrollbars */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #090d16;
+      background: #070b14;
     }
     ::-webkit-scrollbar-thumb {
-      background: #1f2937;
+      background: #1e293b;
       border-radius: 999px;
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans bg-slatebg text-gray-100">
+<body class="min-h-screen flex flex-col font-sans bg-labBg text-slate-100">
 
-  <!-- TOP NAVIGATION & SEARCH BAR -->
-  <header class="sticky top-0 z-30 bg-panel/95 backdrop-blur border-b border-panelBorder px-3 sm:px-6 py-3">
-    <div class="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-      <!-- Brand Identity -->
-      <div class="flex items-center justify-between">
+  <!-- TOP HEADER: BRAND, SEARCH, USER LOGIN & CUSTOM EXAMPLES -->
+  <header class="sticky top-0 z-30 bg-labPanel/95 backdrop-blur-md border-b border-labBorder px-3 sm:px-6 py-3">
+    <div class="max-w-7xl mx-auto flex flex-col gap-3">
+      <div class="flex flex-wrap items-center justify-between gap-2.5">
+        <!-- Brand -->
         <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 via-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-sky-500/20 border border-sky-300/20">
             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
             </svg>
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-bold text-base sm:text-lg tracking-tight text-white">EngiVis <span class="text-sky-400">3D</span></span>
-              <span class="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30">Interactive Lab</span>
+              <span class="font-extrabold text-base sm:text-lg tracking-tight text-white">EngiVis <span class="text-sky-400">3D</span></span>
+              <span class="hidden sm:inline-block text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30">8 Core Modules</span>
             </div>
-            <p class="text-[11px] text-gray-400 hidden sm:block">Visual Engineering & Physics Simulation Engine</p>
+            <p class="text-[11px] text-slate-400">Interactive Civil, Mechanical & Physics Simulation Lab</p>
           </div>
         </div>
 
-        <!-- Mobile Quick Reset -->
-        <button id="mobile-reset-btn" class="lg:hidden px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs font-medium text-gray-200 border border-gray-700">
-          Reset View
-        </button>
+        <!-- Account & Custom Example Actions -->
+        <div class="flex items-center gap-2">
+          <button id="open-custom-btn" class="px-3 py-2 rounded-xl text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-400/40 transition flex items-center gap-1.5">
+            <span>+</span>
+            <span>Custom Examples</span>
+            <span id="custom-count-badge" class="px-1.5 py-0.2 rounded-full bg-amber-400 text-slate-950 font-mono text-[10px] font-bold">0</span>
+          </button>
+
+          <button id="open-auth-btn" class="px-3 py-2 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold shadow-md shadow-sky-500/20 transition flex items-center gap-1.5">
+            <span id="auth-avatar" class="w-4 h-4 rounded-full bg-slate-950/20 flex items-center justify-center text-[10px]">👤</span>
+            <span id="auth-label">Sign In</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Keyword Search & Topic Pills -->
-      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1 lg:max-w-3xl">
-        <!-- Search Input -->
-        <div class="relative flex-1">
-          <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <!-- Search Input + Topic Navigation Strip -->
+      <div class="flex flex-col lg:flex-row lg:items-center gap-2.5">
+        <div class="relative lg:w-80 shrink-0">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
           </svg>
           <input
             id="topic-search"
             type="text"
-            placeholder="Search concept: 'bending moment', 'beam', 'newton', 'gravity', 'projectile'..."
-            class="w-full pl-9 pr-8 py-2 rounded-xl bg-slatebg border border-gray-700 focus:border-sky-400 text-xs sm:text-sm text-gray-100 placeholder-gray-500 outline-none transition"
+            placeholder="Search: beam, hydraulics, pile, raft, geology, road, truss..."
+            class="w-full pl-9 pr-8 py-2 rounded-xl bg-labBg border border-slate-700 focus:border-sky-400 text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition"
           />
-          <button id="clear-search" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs">✕</button>
+          <button id="clear-search" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">✕</button>
         </div>
 
-        <!-- Module Switcher Pills -->
-        <div id="module-tabs" class="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0">
-          <button data-module="beam" class="module-btn active-tab shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-sky-500/20 text-sky-300 border border-sky-400/50">
-            <span>1.</span> Bending & Beam
-          </button>
-          <button data-module="newton" class="module-btn shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-gray-800/80 text-gray-300 border border-gray-700 hover:border-gray-500">
-            <span>2.</span> Newton's Laws
-          </button>
-          <button data-module="projectile" class="module-btn shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-gray-800/80 text-gray-300 border border-gray-700 hover:border-gray-500">
-            <span>3.</span> Gravity & Trajectory
-          </button>
+        <!-- 8 Module Tabs -->
+        <div id="module-tabs" class="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+          <button data-module="beam" class="module-btn shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition bg-sky-500/20 text-sky-300 border border-sky-400/50">1. Beams & Bending</button>
+          <button data-module="newton" class="module-btn shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition bg-labCard text-slate-300 border border-slate-700/80 hover:border-slate-500">2. Newton's Laws</button>
+          <button data-module="projectile" class="module-btn shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition bg-labCard text-slate-300 border border-slate-700/80 hover:border-slate-500">3. Gravity & Motion</button>
+          <button data-module="hydraulics" class="module-btn shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition bg-labCard text-slate-300 border border-slate-700/80 hover:border-slate-500">4. Hydraulics & Pipes</button>
+          <button data-module="foundations" class="module-btn shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition bg-labCard text-slate-300 border border-slate-700/80 hover:border-slate-500">5. Foundations (Shallow/Deep)</button>
+          <button data-module="geology" class="module-btn shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition bg-labCard text-slate-300 border border-slate-700/80 hover:border-slate-500">6. Basic Geology</button>
+          <button data-module="highway" class="module-btn shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition bg-labCard text-slate-300 border border-slate-700/80 hover:border-slate-500">7. Highway & Road</button>
+          <button data-module="truss" class="module-btn shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition bg-labCard text-slate-300 border border-slate-700/80 hover:border-slate-500">8. Structural Design & Trusses</button>
         </div>
       </div>
-    </div>
 
-    <!-- Search Suggestions Dropdown (appears when typing keywords) -->
-    <div id="search-results" class="hidden max-w-7xl mx-auto mt-2 bg-slatebg border border-gray-700 rounded-xl p-2 shadow-2xl"></div>
+      <!-- Search Results Dropdown -->
+      <div id="search-results" class="hidden bg-labBg border border-slate-700 rounded-xl p-2 shadow-2xl"></div>
+    </div>
   </header>
 
-  <!-- MAIN WORKSPACE: 3D STAGE + INTERACTIVE INSPECTOR -->
+  <!-- ACTIVE USER BANNER (Shown when logged in) -->
+  <div id="user-session-bar" class="hidden bg-sky-500/10 border-b border-sky-500/20 px-3 sm:px-6 py-1.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div class="flex items-center gap-2 text-sky-200">
+        <span>Signed in as <strong id="session-name" class="text-white"></strong></span>
+        <span id="session-role-badge" class="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-mono text-[10px]"></span>
+      </div>
+      <button id="sign-out-btn" class="text-slate-400 hover:text-rose-400 font-medium transition">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- MAIN WORKSPACE -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-    <!-- LEFT / TOP: 3D INTERACTIVE VIEWPORT & STEP BREAKDOWN (7 cols on desktop) -->
-    <section class="lg:col-span-7 flex flex-col gap-3">
-      <!-- 3D Canvas Card -->
-      <div class="relative rounded-2xl overflow-hidden border border-panelBorder bg-gradient-to-b from-[#0c1322] to-[#070a12] shadow-2xl h-[340px] sm:h-[430px] lg:h-[470px]">
-        <!-- Top Overlay Badges -->
-        <div class="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
-          <div class="bg-panel/85 backdrop-blur-md border border-gray-700/80 rounded-xl px-3 py-1.5 pointer-events-auto">
+    <!-- LEFT COLUMN: 3D STAGE, GUIDED STEPS & SPONSORED SLOT (7 cols) -->
+    <section class="lg:col-span-7 flex flex-col gap-3.5">
+
+      <!-- 3D Viewport Card -->
+      <div class="relative rounded-2xl overflow-hidden border border-labBorder bg-gradient-to-b from-[#0d172a] via-[#09101d] to-[#05080f] shadow-2xl h-[360px] sm:h-[440px] lg:h-[490px]">
+        <!-- Top Overlay Info -->
+        <div class="absolute top-3 left-3 right-3 z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-2 pointer-events-none">
+          <div class="bg-labPanel/85 backdrop-blur-md border border-slate-700/80 rounded-xl px-3 py-2 pointer-events-auto max-w-md">
             <span id="viewport-category" class="text-[10px] font-mono uppercase tracking-wider text-sky-400 block">Structural Mechanics</span>
-            <h1 id="viewport-title" class="text-xs sm:text-sm font-bold text-white">Simply Supported Beam & Bending Moment</h1>
+            <h1 id="viewport-title" class="text-xs sm:text-sm font-bold text-white leading-snug">Simply Supported Beam &amp; Bending Moment</h1>
+            <p id="active-custom-tag" class="hidden text-[11px] text-amber-300 mt-0.5 font-medium"></p>
           </div>
 
-          <!-- Legend Badge -->
-          <div id="viewport-legend" class="bg-panel/85 backdrop-blur-md border border-gray-700/80 rounded-xl px-3 py-1.5 text-[11px] flex items-center gap-3 pointer-events-auto">
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>Compression</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block"></span>Tension</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>Load</span>
-          </div>
+          <!-- Visual Legend -->
+          <div id="viewport-legend" class="bg-labPanel/85 backdrop-blur-md border border-slate-700/80 rounded-xl px-3 py-2 text-[11px] flex flex-wrap items-center gap-x-3 gap-y-1 pointer-events-auto"></div>
         </div>
 
-        <!-- Three.js Mount Point -->
+        <!-- Three.js Canvas Mount -->
         <div id="canvas-container"></div>
 
-        <!-- Bottom Viewport Controls Overlay -->
+        <!-- Bottom Viewport Controls -->
         <div class="absolute bottom-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
-          <div class="text-[11px] text-gray-400 bg-panel/80 backdrop-blur px-2.5 py-1 rounded-lg border border-gray-800 pointer-events-auto">
-            Drag to rotate • Pinch/Scroll to zoom
+          <div class="text-[11px] text-slate-300 bg-labPanel/85 backdrop-blur px-2.5 py-1.5 rounded-xl border border-slate-800 pointer-events-auto">
+            1-Finger Drag: Rotate 3D • Pinch/Scroll: Zoom
           </div>
 
           <div class="flex items-center gap-2 pointer-events-auto">
@@ -207,257 +228,508 @@
               <span id="play-icon">⏸</span>
               <span id="play-label">Pause</span>
             </button>
-            <button id="btn-reset" class="px-3.5 py-2 rounded-xl bg-panel/90 hover:bg-gray-800 text-gray-200 font-semibold text-xs border border-gray-700 transition">
+            <button id="btn-reset" class="px-3.5 py-2 rounded-xl bg-labPanel/90 hover:bg-slate-800 text-slate-200 font-semibold text-xs border border-slate-700 transition">
               ↺ Reset
             </button>
           </div>
         </div>
       </div>
 
-      <!-- STEP-BY-STEP PRINCIPLE BREAKDOWN BAR -->
-      <div class="rounded-2xl bg-panel border border-panelBorder p-3.5 sm:p-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+      <!-- Step-by-Step Guided Breakdown -->
+      <div class="rounded-2xl bg-labPanel border border-labBorder p-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
           <div>
-            <span class="text-[11px] font-mono uppercase tracking-wider text-amber-400">Guided Visual Learning</span>
+            <span class="text-[11px] font-mono uppercase tracking-wider text-amber-400">Guided Engineering Walkthrough</span>
             <h2 class="text-sm font-bold text-white">Step-by-Step Principle Breakdown</h2>
           </div>
-          <!-- Step Buttons -->
-          <div class="grid grid-cols-3 gap-1.5 bg-slatebg p-1 rounded-xl border border-gray-800">
-            <button data-step="1" class="step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition bg-sky-500 text-slate-950">
-              Step 1: Setup
-            </button>
-            <button data-step="2" class="step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition text-gray-300 hover:text-white">
-              Step 2: Forces
-            </button>
-            <button data-step="3" class="step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition text-gray-300 hover:text-white">
-              Step 3: Equations
-            </button>
+          <div class="grid grid-cols-3 gap-1.5 bg-labBg p-1 rounded-xl border border-slate-800">
+            <button data-step="1" class="step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition bg-sky-500 text-slate-950">1. Setup</button>
+            <button data-step="2" class="step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white">2. Action</button>
+            <button data-step="3" class="step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white">3. Design</button>
           </div>
         </div>
+        <div id="step-content" class="rounded-xl bg-labBg/90 border border-slate-800/90 p-3.5 text-xs sm:text-sm text-slate-300 leading-relaxed"></div>
+      </div>
 
-        <!-- Step Explanation Box -->
-        <div id="step-content" class="rounded-xl bg-slatebg/90 border border-gray-800 p-3.5 text-xs sm:text-sm text-gray-300 leading-relaxed">
-          <!-- Populated dynamically by JS -->
+      <!-- Non-Intrusive Sponsored / Engagement Slot (Ready for AdSense / Partner Banners) -->
+      <div class="rounded-2xl bg-labCard/70 border border-dashed border-slate-700/90 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono text-[10px] uppercase">Sponsored Slot</span>
+          <p class="text-xs text-slate-300">
+            <strong>Campus Study &amp; Lab Partner Space:</strong> Ready for AdSense, engineering tutorial sponsors, or department notices as traffic grows.
+          </p>
         </div>
+        <span class="text-[11px] font-mono text-slate-400 shrink-0">Ad Unit #EV-3D-01</span>
       </div>
     </section>
 
-    <!-- RIGHT / BOTTOM: PARAMETERS, LIVE CALCULATIONS & DIAGRAMS (5 cols on desktop) -->
-    <aside class="lg:col-span-5 flex flex-col gap-3">
+    <!-- RIGHT COLUMN: CONTROLS, LIVE TELEMETRY, DIAGRAMS & EQUATIONS (5 cols) -->
+    <aside class="lg:col-span-5 flex flex-col gap-3.5">
 
-      <!-- Interactive Parameter Controls Card -->
-      <div class="rounded-2xl bg-panel border border-panelBorder p-4">
+      <!-- Parameter Controls -->
+      <div class="rounded-2xl bg-labPanel border border-labBorder p-4">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-sm font-bold text-white flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-sky-400"></span>
             Interactive Parameters
           </h2>
-          <span class="text-[11px] font-mono text-gray-400">Real-Time Physics</span>
+          <span class="text-[11px] font-mono text-slate-400">Real-Time 3D</span>
         </div>
-
-        <!-- Dynamic Sliders Container -->
-        <div id="controls-container" class="space-y-4">
-          <!-- Sliders injected dynamically per module -->
-        </div>
+        <div id="controls-container" class="space-y-4"></div>
       </div>
 
-      <!-- Live Telemetry & Calculated Values Card -->
-      <div class="rounded-2xl bg-panel border border-panelBorder p-4">
+      <!-- Calculated Engineering Readouts -->
+      <div class="rounded-2xl bg-labPanel border border-labBorder p-4">
         <h2 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-amber-400"></span>
           Live Engineering Telemetry
         </h2>
-        <div id="metrics-grid" class="grid grid-cols-2 gap-2.5">
-          <!-- Calculated cards injected dynamically -->
-        </div>
+        <div id="metrics-grid" class="grid grid-cols-2 gap-2.5"></div>
       </div>
 
-      <!-- Module 1 Synchronized Shear Force & Bending Moment Diagram Panel -->
-      <div id="diagrams-card" class="rounded-2xl bg-panel border border-panelBorder p-4">
+      <!-- Synchronized Diagrams Card (Shown for Beam module) -->
+      <div id="diagrams-card" class="rounded-2xl bg-labPanel border border-labBorder p-4">
         <div class="flex items-center justify-between mb-2">
-          <h2 class="text-sm font-bold text-white">Live SFD & BMD Diagrams</h2>
-          <span class="text-[10px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">Synchronized</span>
+          <h2 class="text-sm font-bold text-white">Shear Force &amp; Bending Moment</h2>
+          <span class="text-[10px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">Live Plot</span>
         </div>
-        <p class="text-[11px] text-gray-400 mb-3">Shear Force $V(x)$ and Bending Moment $M(x)$ update live as you move the load or change span.</p>
-
         <div class="space-y-3">
-          <div class="bg-slatebg rounded-xl p-2.5 border border-gray-800">
-            <div class="flex justify-between text-[11px] font-mono mb-1">
-              <span class="text-emerald-400 font-semibold">Shear Force Diagram (SFD)</span>
-              <span id="sfd-badge" class="text-gray-400">kN</span>
-            </div>
+          <div class="bg-labBg rounded-xl p-2.5 border border-slate-800">
+            <div class="text-[11px] font-mono text-emerald-400 font-semibold mb-1">Shear Force Diagram — V(x)</div>
             <canvas id="sfd-canvas" class="w-full h-24 rounded"></canvas>
           </div>
-
-          <div class="bg-slatebg rounded-xl p-2.5 border border-gray-800">
-            <div class="flex justify-between text-[11px] font-mono mb-1">
-              <span class="text-amber-400 font-semibold">Bending Moment Diagram (BMD)</span>
-              <span id="bmd-badge" class="text-gray-400">kN·m</span>
-            </div>
+          <div class="bg-labBg rounded-xl p-2.5 border border-slate-800">
+            <div class="text-[11px] font-mono text-amber-400 font-semibold mb-1">Bending Moment Diagram — M(x)</div>
             <canvas id="bmd-canvas" class="w-full h-24 rounded"></canvas>
           </div>
         </div>
       </div>
 
-      <!-- Governing Equations & Intuition Card -->
-      <div class="rounded-2xl bg-panel border border-panelBorder p-4">
-        <h2 class="text-sm font-bold text-white mb-2">Governing Equations & Intuition</h2>
-        <div id="formula-box" class="bg-slatebg rounded-xl p-3 border border-gray-800 font-mono text-xs text-sky-300 space-y-1.5">
-          <!-- Formulas injected dynamically -->
-        </div>
+      <!-- Governing Equations with proper <sub> and <sup> -->
+      <div class="rounded-2xl bg-labPanel border border-labBorder p-4">
+        <h2 class="text-sm font-bold text-white mb-2">Governing Equations</h2>
+        <div id="formula-box" class="bg-labBg rounded-xl p-3 border border-slate-800 font-mono text-xs text-sky-300 space-y-2 leading-relaxed"></div>
       </div>
 
     </aside>
   </main>
 
+  <!-- ===================================================================== -->
+  <!-- MODAL 1: LOGIN / USER SESSION                                         -->
+  <!-- ===================================================================== -->
+  <div id="auth-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md rounded-2xl bg-labPanel border border-slate-700 p-5 shadow-2xl">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h3 class="text-base font-bold text-white">Sign In to EngiVis 3D</h3>
+          <p class="text-xs text-slate-400">Save custom examples &amp; personalize your lab profile</p>
+        </div>
+        <button id="close-auth-btn" class="text-slate-400 hover:text-white text-lg px-2">✕</button>
+      </div>
+
+      <form id="auth-form" class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Full Name or Matric / Staff ID</label>
+          <input id="auth-name-input" type="text" required placeholder="e.g., Praise Adeyemi / ENG/21/045" class="w-full px-3 py-2 rounded-xl bg-labBg border border-slate-700 focus:border-sky-400 text-sm text-white outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Email Address</label>
+          <input id="auth-email-input" type="email" required placeholder="student@university.edu.ng" class="w-full px-3 py-2 rounded-xl bg-labBg border border-slate-700 focus:border-sky-400 text-sm text-white outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Role</label>
+          <select id="auth-role-input" class="w-full px-3 py-2 rounded-xl bg-labBg border border-slate-700 focus:border-sky-400 text-sm text-white outline-none">
+            <option value="Engineering Student">Engineering Student</option>
+            <option value="Lecturer / Instructor">Lecturer / Instructor</option>
+            <option value="Independent Learner">Independent Learner</option>
+          </select>
+        </div>
+
+        <div class="pt-2 flex flex-col sm:flex-row gap-2">
+          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition">
+            Save &amp; Continue
+          </button>
+          <button type="button" id="guest-login-btn" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition">
+            Guest Mode
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 2: CUSTOM EXAMPLE CREATOR & SAVED LIBRARY                       -->
+  <!-- ===================================================================== -->
+  <div id="custom-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="w-full max-w-xl rounded-2xl bg-labPanel border border-slate-700 p-5 shadow-2xl my-auto">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h3 class="text-base font-bold text-white">Custom Example Creator</h3>
+          <p class="text-xs text-slate-400">Create your own scenario parameters &amp; notes, then load them into 3D</p>
+        </div>
+        <button id="close-custom-btn" class="text-slate-400 hover:text-white text-lg px-2">✕</button>
+      </div>
+
+      <form id="custom-example-form" class="space-y-3 bg-labBg/80 border border-slate-800 rounded-xl p-3.5 mb-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Example Title</label>
+            <input id="custom-title" type="text" required placeholder="e.g., Bridge Girder Overloading" class="w-full px-3 py-2 rounded-xl bg-labPanel border border-slate-700 focus:border-amber-400 text-xs sm:text-sm text-white outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Topic Module</label>
+            <select id="custom-module" class="w-full px-3 py-2 rounded-xl bg-labPanel border border-slate-700 focus:border-amber-400 text-xs sm:text-sm text-white outline-none">
+              <option value="beam">1. Simply Supported Beam</option>
+              <option value="newton">2. Newton's Laws</option>
+              <option value="projectile">3. Gravity &amp; Projectile</option>
+              <option value="hydraulics">4. Hydraulics &amp; Pipe Flow</option>
+              <option value="foundations">5. Foundations (Shallow/Deep)</option>
+              <option value="geology">6. Basic Geology</option>
+              <option value="highway">7. Highway &amp; Pavement</option>
+              <option value="truss">8. Structural Design &amp; Trusses</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2.5">
+          <div>
+            <label id="param1-label" class="block text-[11px] font-medium text-slate-300 mb-1">Primary Value 1</label>
+            <input id="custom-p1" type="number" step="any" value="65" class="w-full px-2.5 py-2 rounded-xl bg-labPanel border border-slate-700 text-xs font-mono text-white outline-none" />
+          </div>
+          <div>
+            <label id="param2-label" class="block text-[11px] font-medium text-slate-300 mb-1">Primary Value 2</label>
+            <input id="custom-p2" type="number" step="any" value="0.5" class="w-full px-2.5 py-2 rounded-xl bg-labPanel border border-slate-700 text-xs font-mono text-white outline-none" />
+          </div>
+          <div>
+            <label id="param3-label" class="block text-[11px] font-medium text-slate-300 mb-1">Primary Value 3</label>
+            <input id="custom-p3" type="number" step="any" value="8" class="w-full px-2.5 py-2 rounded-xl bg-labPanel border border-slate-700 text-xs font-mono text-white outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Problem Statement / Lecture Note</label>
+          <textarea id="custom-note" rows="2" placeholder="Describe what students should observe in this custom example..." class="w-full px-3 py-2 rounded-xl bg-labPanel border border-slate-700 focus:border-amber-400 text-xs text-white outline-none"></textarea>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition">
+          Save &amp; Launch Custom Example
+        </button>
+      </form>
+
+      <!-- Saved Custom Examples List -->
+      <div>
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Saved Examples</h4>
+        <div id="saved-examples-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-msg" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-slate-900 border border-sky-400/50 text-sky-200 text-xs font-semibold shadow-2xl"></div>
+
   <script>
     /**
-     * EngiVis 3D — Interactive Engineering & Physics Visual Lab
-     * Single-file Three.js + Vanilla JS simulation engine.
-     * Supports mouse/touch 3D orbit controls, responsive resizing,
-     * step-by-step guided principle breakdowns, and live engineering diagrams.
+     * EngiVis 3D — Complete 8-Module Interactive Engineering & Physics Simulation Engine
+     * All formulas and readouts use proper HTML <sub> and <sup> tags.
      */
 
     // =========================================================================
-    // 1. CURRICULUM & SEARCH METADATA
+    // 1. MODULE DEFINITIONS (8 TOPICS)
     // =========================================================================
     const MODULES = {
       beam: {
         id: 'beam',
+        tabLabel: '1. Beams & Bending',
         category: 'Structural Mechanics • Strength of Materials',
-        title: 'Simply Supported Beam & Bending Moment',
-        keywords: ['bending moment', 'beam', 'shear force', 'sfd', 'bmd', 'deflection', 'stress', 'tension', 'compression', 'support', 'load', 'structure', 'civil', 'mechanical'],
+        title: 'Simply Supported Beam &amp; Bending Moment',
+        keywords: ['beam', 'bending moment', 'shear force', 'sfd', 'bmd', 'deflection', 'stress', 'tension', 'compression', 'support', 'load', 'r_a', 'r_b'],
         legend: [
-          { color: 'bg-rose-500', label: 'Compression (Top)' },
-          { color: 'bg-sky-400', label: 'Tension (Bottom)' },
-          { color: 'bg-amber-400', label: 'Point Load P' }
+          { color: 'bg-rose-500', label: 'Compression' },
+          { color: 'bg-sky-400', label: 'Tension' },
+          { color: 'bg-amber-400', label: 'Load P' }
         ],
         steps: {
           1: {
-            heading: 'Step 1: Structural Setup & Boundary Conditions',
-            body: 'A horizontal beam of span <strong>L</strong> rests on a <strong>Pin Support</strong> at the left (resists vertical & horizontal movement) and a <strong>Roller Support</strong> at the right (allows thermal expansion/rotation). Before load is applied, internal stress is zero.'
+            heading: 'Step 1: Pin &amp; Roller Support Setup',
+            body: 'A beam of span <strong>L</strong> sits on a pinned support at the left (reaction <strong>R<sub>A</sub></strong>) and a roller support at the right (reaction <strong>R<sub>B</sub></strong>), allowing end rotation while resisting vertical displacement.'
           },
           2: {
-            heading: 'Step 2: External Load, Reactions & Internal Stress',
-            body: 'Applying downward load <strong>P</strong> at distance <strong>x</strong> generates upward reactions <strong>R₁</strong> and <strong>R₂</strong>. Notice the beam bends downward: top fibers squeeze together (<strong>Red = Compression</strong>) while bottom fibers stretch apart (<strong>Blue = Tension</strong>).'
+            heading: 'Step 2: Bending &amp; Fiber Stress Distribution',
+            body: 'Downward point load <strong>P</strong> at distance <strong>x</strong> bends the beam downward. Upper fibers experience <strong>compression</strong> (red) while lower fibers experience <strong>tension</strong> (blue), separated by the neutral axis.'
           },
           3: {
-            heading: 'Step 3: Maximum Shear & Bending Moment Equations',
-            body: 'Maximum bending moment occurs directly beneath the point load where Shear Force crosses zero: <strong>M_max = (P · x · (L − x)) / L</strong>. Moving the load to mid-span (x = L/2) maximizes bending to <strong>P·L / 4</strong>.'
+            heading: 'Step 3: Peak Shear &amp; Bending Moment Design',
+            body: 'Maximum bending moment occurs under the load: <strong>M<sub>max</sub> = P · x · (L − x) / L</strong>. Shifting <strong>P</strong> toward mid-span increases <strong>M<sub>max</sub></strong> up to <strong>P · L / 4</strong>.'
           }
         },
         formulas: [
-          'R₁ = P · (L − x) / L   |   R₂ = P · x / L',
-          'V_max = max(R₁, R₂)',
-          'M_max = P · x · (L − x) / L  (at load point x)',
-          'σ = −M · y / I   (Bending Stress Distribution)'
+          'R<sub>A</sub> = P · (L − x) / L   |   R<sub>B</sub> = P · x / L',
+          'V<sub>max</sub> = max(R<sub>A</sub>, R<sub>B</sub>)',
+          'M<sub>max</sub> = (P · x · (L − x)) / L',
+          '&sigma;<sub>b</sub> = M · y / I   (Flexural stress)'
         ]
       },
+
       newton: {
         id: 'newton',
+        tabLabel: "2. Newton's Laws",
         category: 'Classical Mechanics • Dynamics',
-        title: "Newton's Laws of Motion & Free-Body Dynamics",
-        keywords: ['newton', 'motion', 'force', 'friction', 'mass', 'acceleration', 'inertia', 'free body', 'dynamics', 'second law', 'velocity', 'kinetic'],
+        title: "Newton's Laws of Motion &amp; Friction",
+        keywords: ['newton', 'motion', 'force', 'friction', 'mass', 'acceleration', 'inertia', 'dynamics', 'second law', 'velocity'],
         legend: [
-          { color: 'bg-emerald-400', label: 'Applied Force F' },
-          { color: 'bg-rose-500', label: 'Friction f_k' },
+          { color: 'bg-emerald-400', label: 'Force F' },
+          { color: 'bg-rose-500', label: 'Friction f<sub>k</sub>' },
           { color: 'bg-sky-400', label: 'Normal N' },
-          { color: 'bg-amber-400', label: 'Weight mg' }
+          { color: 'bg-amber-400', label: 'Weight m·g' }
         ],
         steps: {
           1: {
-            heading: 'Step 1: Inertia & Vertical Equilibrium (1st Law)',
-            body: 'A body of mass <strong>m</strong> rests on a horizontal track. Downward gravitational weight (<strong>W = m·g</strong>) is balanced by the upward surface Normal Force (<strong>N = m·g</strong>). Without unbalanced horizontal force, the block stays at rest.'
+            heading: 'Step 1: Vertical Equilibrium &amp; Normal Reaction',
+            body: 'Weight <strong>W = m · g</strong> pulls the block downward onto the track while upward normal force <strong>N = m · g</strong> balances it vertically.'
           },
           2: {
-            heading: 'Step 2: Free-Body Force Vectors in Action',
-            body: 'Pulling/pushing with Applied Force <strong>F</strong> activates opposing surface Friction (<strong>f = μ·N</strong>). If <strong>F ≤ μ·N</strong>, static friction locks the block in place. Once <strong>F > μ·N</strong>, net force accelerates the mass forward.'
+            heading: 'Step 2: Overcoming Surface Friction',
+            body: 'Applied force <strong>F</strong> pushes right while friction resists up to <strong>f<sub>max</sub> = &mu; · N</strong>. Motion begins only when <strong>F &gt; f<sub>max</sub></strong>.'
           },
           3: {
-            heading: 'Step 3: Newton’s Second Law (F_net = m · a)',
-            body: 'Net horizontal force drives acceleration: <strong>a = (F − μ·m·g) / m</strong>. Notice how increasing mass <strong>m</strong> increases both inertia and normal friction force, reducing acceleration for the same push.'
+            heading: 'Step 3: Newton’s Second Law',
+            body: 'Net horizontal force <strong>F<sub>net</sub> = F − f<sub>k</sub></strong> produces acceleration <strong>a = F<sub>net</sub> / m</strong> along the track.'
           }
         },
         formulas: [
-          'N = m · g   (g = 9.81 m/s²)',
-          'f_max = μ · N = μ · m · g',
-          'F_net = max(0, F − f_max)',
-          'a = F_net / m   |   v(t) = v₀ + a·t'
+          'N = m · g   (g = 9.81 m/s<sup>2</sup>)',
+          'f<sub>max</sub> = &mu; · N = &mu; · m · g',
+          'F<sub>net</sub> = max(0, F − f<sub>max</sub>)',
+          'a = F<sub>net</sub> / m   |   v = v<sub>0</sub> + a · t'
         ]
       },
+
       projectile: {
         id: 'projectile',
-        category: 'Kinematics • Ballistics & Gravity',
-        title: 'Gravity & Projectile Trajectory',
-        keywords: ['gravity', 'projectile', 'trajectory', 'parabola', 'launch', 'angle', 'velocity', 'range', 'height', 'earth', 'moon', 'mars', 'kinematics'],
+        tabLabel: '3. Gravity & Motion',
+        category: 'Kinematics • Ballistics &amp; Gravity',
+        title: 'Gravity &amp; Projectile Trajectory',
+        keywords: ['gravity', 'projectile', 'trajectory', 'parabola', 'launch', 'angle', 'velocity', 'range', 'height', 'earth', 'moon', 'mars'],
         legend: [
-          { color: 'bg-amber-400', label: 'Trajectory Path' },
-          { color: 'bg-emerald-400', label: 'Horizontal v_x' },
-          { color: 'bg-sky-400', label: 'Vertical v_y' }
+          { color: 'bg-amber-400', label: 'Trajectory' },
+          { color: 'bg-emerald-400', label: 'v<sub>x</sub> (Constant)' },
+          { color: 'bg-sky-400', label: 'v<sub>y</sub> (Gravity)' }
         ],
         steps: {
           1: {
-            heading: 'Step 1: Launch Vector Decomposition',
-            body: 'A projectile launches at speed <strong>v₀</strong> and elevation angle <strong>θ</strong>. Its initial velocity splits into two independent perpendicular components: horizontal <strong>vₓ = v₀·cos(θ)</strong> and vertical <strong>vᵧ = v₀·sin(θ)</strong>.'
+            heading: 'Step 1: Initial Velocity Components',
+            body: 'Launch speed <strong>v<sub>0</sub></strong> at angle <strong>&theta;</strong> resolves into horizontal <strong>v<sub>x</sub> = v<sub>0</sub> · cos(&theta;)</strong> and vertical <strong>v<sub>y0</sub> = v<sub>0</sub> · sin(&theta;)</strong>.'
           },
           2: {
-            heading: 'Step 2: Parabolic Flight Under Constant Gravity',
-            body: 'In flight, horizontal speed <strong>vₓ</strong> stays constant (green arrow), while downward gravity <strong>g</strong> continuously reduces vertical velocity <strong>vᵧ</strong> (blue arrow) until <strong>vᵧ = 0</strong> at peak height, then accelerates it downward.'
+            heading: 'Step 2: Independent Horizontal &amp; Vertical Motion',
+            body: 'Horizontal speed <strong>v<sub>x</sub></strong> remains constant while gravity <strong>g<sub>0</sub></strong> decelerates <strong>v<sub>y</sub></strong> to zero at the apex and accelerates it downward.'
           },
           3: {
-            heading: 'Step 3: Peak Height, Flight Time & Range Equations',
-            body: 'Maximum height is <strong>H = (v₀²·sin²θ) / (2g)</strong> and horizontal range is <strong>R = (v₀²·sin 2θ) / g</strong>. Switching gravity from Earth (9.81) to Moon (1.62) stretches the trajectory 6× farther!'
+            heading: 'Step 3: Peak Height &amp; Range',
+            body: 'Peak elevation is <strong>H<sub>max</sub> = (v<sub>0</sub><sup>2</sup> · sin<sup>2</sup>&theta;) / (2g<sub>0</sub>)</strong> and horizontal range is <strong>R = (v<sub>0</sub><sup>2</sup> · sin 2&theta;) / g<sub>0</sub></strong>.'
           }
         },
         formulas: [
-          'vₓ = v₀ · cos(θ)   |   vᵧ(t) = v₀ · sin(θ) − g·t',
-          'T_flight = (2 · v₀ · sin(θ)) / g',
-          'H_max = (v₀² · sin²(θ)) / (2 · g)',
-          'Range R = (v₀² · sin(2θ)) / g'
+          'v<sub>x</sub> = v<sub>0</sub> · cos(&theta;)   |   v<sub>y0</sub> = v<sub>0</sub> · sin(&theta;)',
+          'H<sub>max</sub> = (v<sub>0</sub><sup>2</sup> · sin<sup>2</sup>&theta;) / (2 · g<sub>0</sub>)',
+          'R = (v<sub>0</sub><sup>2</sup> · sin(2&theta;)) / g<sub>0</sub>',
+          't<sub>flight</sub> = (2 · v<sub>0</sub> · sin(&theta;)) / g<sub>0</sub>'
+        ]
+      },
+
+      hydraulics: {
+        id: 'hydraulics',
+        tabLabel: '4. Hydraulics & Pipes',
+        category: 'Fluid Mechanics • Pipe Flow',
+        title: 'Hydraulics, Continuity &amp; Bernoulli Pipe Flow',
+        keywords: ['hydraulics', 'pipe', 'flow', 'bernoulli', 'continuity', 'venturi', 'pressure', 'velocity', 'fluid', 'discharge'],
+        legend: [
+          { color: 'bg-cyan-400', label: 'Fluid Stream' },
+          { color: 'bg-amber-400', label: 'Throat Constriction' },
+          { color: 'bg-emerald-400', label: 'Velocity v<sub>1</sub> &rarr; v<sub>2</sub>' }
+        ],
+        steps: {
+          1: {
+            heading: 'Step 1: Volumetric Flow Rate &amp; Continuity',
+            body: 'For incompressible flow, discharge <strong>Q = A<sub>1</sub> · v<sub>1</sub> = A<sub>2</sub> · v<sub>2</sub></strong> stays constant. Narrowing the diameter from <strong>D<sub>1</sub></strong> to <strong>D<sub>2</sub></strong> forces fluid velocity <strong>v<sub>2</sub></strong> upward.'
+          },
+          2: {
+            heading: 'Step 2: Bernoulli Pressure Drop',
+            body: 'Where fluid accelerates in the narrower throat, kinetic energy rises and static pressure drops: <strong>&Delta;p = p<sub>1</sub> − p<sub>2</sub> = &frac12; &rho; (v<sub>2</sub><sup>2</sup> − v<sub>1</sub><sup>2</sup>)</strong>.'
+          },
+          3: {
+            heading: 'Step 3: Hydraulic Design Sizing',
+            body: 'Engineers select pipe diameters <strong>D<sub>1</sub></strong> and <strong>D<sub>2</sub></strong> to balance flow velocity against pressure drop and cavitation risk.'
+          }
+        },
+        formulas: [
+          'A<sub>i</sub> = &pi; · D<sub>i</sub><sup>2</sup> / 4   |   v<sub>i</sub> = Q / A<sub>i</sub>',
+          'Q = A<sub>1</sub> · v<sub>1</sub> = A<sub>2</sub> · v<sub>2</sub>',
+          'p<sub>1</sub> − p<sub>2</sub> = 0.5 · &rho; · (v<sub>2</sub><sup>2</sup> − v<sub>1</sub><sup>2</sup>)'
+        ]
+      },
+
+      foundations: {
+        id: 'foundations',
+        tabLabel: '5. Foundations (Shallow/Deep)',
+        category: 'Geotechnical Engineering • Substructure',
+        title: 'Shallow &amp; Deep Foundations (Pad, Raft &amp; Piles)',
+        keywords: ['foundation', 'shallow', 'deep', 'pad', 'isolated', 'raft', 'mat', 'pile', 'piling', 'bearing', 'soil', 'geotech'],
+        legend: [
+          { color: 'bg-slate-300', label: 'Concrete Footing / Cap' },
+          { color: 'bg-amber-500', label: 'Column Load Q<sub>c</sub>' },
+          { color: 'bg-sky-400', label: 'Piles / Bearing Stratum' }
+        ],
+        steps: {
+          1: {
+            heading: 'Step 1: Selecting Shallow vs. Deep Foundations',
+            body: '<strong>Pad Footings</strong> spread single column loads near the surface; <strong>Raft (Mat) Foundations</strong> span wide areas to bridge soft/variable soil; <strong>Pile Foundations</strong> transfer heavy loads down to deeper competent strata.'
+          },
+          2: {
+            heading: 'Step 2: Construction &amp; Load Transfer Mechanism',
+            body: 'Concrete footings/rafts rest on prepared sub-base/soil, while driven or bored piles extend vertically into deeper layers through skin friction and end-bearing.'
+          },
+          3: {
+            heading: 'Step 3: Bearing Stress &amp; Factor of Safety',
+            body: 'Applied bearing pressure <strong>q = Q<sub>c</sub> / A<sub>eff</sub></strong> must stay safely below allowable soil/pile capacity so <strong>FoS &ge; 2.5–3.0</strong>.'
+          }
+        },
+        formulas: [
+          'q<sub>applied</sub> = Q<sub>c</sub> / A<sub>eff</sub>   (Pad / Raft area)',
+          'Q<sub>pile</sub> = Q<sub>s</sub> + Q<sub>b</sub>   (Shaft friction + End bearing)',
+          'FoS = q<sub>ult</sub> / q<sub>applied</sub>   (Safety margin)'
+        ]
+      },
+
+      geology: {
+        id: 'geology',
+        tabLabel: '6. Basic Geology',
+        category: 'Engineering Geology • Stratigraphy &amp; Rock Mass',
+        title: 'Basic Geology, Strata Dip &amp; Overburden Stress',
+        keywords: ['geology', 'strata', 'stratigraphy', 'rock', 'soil', 'shale', 'sandstone', 'bedrock', 'dip', 'overburden', 'topsoil'],
+        legend: [
+          { color: 'bg-amber-700', label: 'Topsoil &amp; Clay' },
+          { color: 'bg-slate-500', label: 'Weathered Shale' },
+          { color: 'bg-indigo-400', label: 'Sandstone / Bedrock' }
+        ],
+        steps: {
+          1: {
+            heading: 'Step 1: Geological Stratigraphy &amp; Dip Angle',
+            body: 'Subsurface ground consists of distinct geological layers (topsoil, clay/shale, sandstone, and competent bedrock) tilted at a geological <strong>dip angle &alpha;</strong>.'
+          },
+          2: {
+            heading: 'Step 2: Vertical Overburden Stress',
+            body: 'At depth <strong>z</strong>, overlying strata weight creates vertical overburden stress <strong>&sigma;<sub>v</sub> = &rho; · g · z</strong>.'
+          },
+          3: {
+            heading: 'Step 3: Site Investigation &amp; Rock Competency',
+            body: 'Dipping beds and weak shale seams affect slope stability, tunnel alignment, and foundation depth decisions.'
+          }
+        },
+        formulas: [
+          '&sigma;<sub>v</sub> = &rho;<sub>avg</sub> · g · z   (Overburden stress at depth z)',
+          '&sigma;<sub>n</sub> = &sigma;<sub>v</sub> · cos<sup>2</sup>(&alpha;)   (Normal to dipping bed)',
+          '&tau;<sub>d</sub> = &sigma;<sub>v</sub> · sin(&alpha;) · cos(&alpha;)   (Shear along plane)'
+        ]
+      },
+
+      highway: {
+        id: 'highway',
+        tabLabel: '7. Highway & Road',
+        category: 'Transportation Engineering • Pavement Design',
+        title: 'Highway Pavement Layers, Axle Load &amp; CBR',
+        keywords: ['highway', 'road', 'pavement', 'asphalt', 'subgrade', 'sub-base', 'base', 'cbr', 'axle', 'traffic', 'camber'],
+        legend: [
+          { color: 'bg-slate-800', label: 'Bituminous Wearing Course' },
+          { color: 'bg-amber-500', label: 'Crushed Base Course' },
+          { color: 'bg-sky-600', label: 'Sub-Base &amp; Subgrade' }
+        ],
+        steps: {
+          1: {
+            heading: 'Step 1: Multi-Layer Road Structure',
+            body: 'A modern road distributes wheel loads across <strong>Wearing Course</strong> (asphalt), <strong>Base Course</strong>, <strong>Sub-Base</strong>, and natural <strong>Subgrade</strong>.'
+          },
+          2: {
+            heading: 'Step 2: Axle Load &amp; Subgrade Strength (CBR)',
+            body: 'Heavier axle loads <strong>W<sub>axle</sub></strong> and lower <strong>CBR (%)</strong> subgrade strength demand thicker protective granular and bituminous layers.'
+          },
+          3: {
+            heading: 'Step 3: Surface Drainage &amp; Deflection Control',
+            body: 'Cross-slope camber sheds rainwater rapidly so moisture does not weaken the subgrade or trigger rutting.'
+          }
+        },
+        formulas: [
+          'h<sub>req</sub> &prop; (W<sub>axle</sub> / CBR)<sup>0.4</sup>   (Empirical thickness trend)',
+          'p<sub>contact</sub> = W<sub>axle</sub> / (4 · A<sub>tire</sub>)',
+          'Camber Fall = (Width / 2) · i<sub>cross</sub>'
+        ]
+      },
+
+      truss: {
+        id: 'truss',
+        tabLabel: '8. Structural Design & Trusses',
+        category: 'Structural Analysis &amp; Design • Trusses',
+        title: '3D Truss Bridge Forces (Tension vs. Compression)',
+        keywords: ['truss', 'structural design', 'bridge', 'tension', 'compression', 'member', 'force', 'warren', 'pratt', 'axial'],
+        legend: [
+          { color: 'bg-rose-500', label: 'Compression (&minus;N)' },
+          { color: 'bg-sky-400', label: 'Tension (+N)' },
+          { color: 'bg-amber-400', label: 'Deck Load P' }
+        ],
+        steps: {
+          1: {
+            heading: 'Step 1: Triangulated Truss Geometry',
+            body: 'Connected slender members form rigid triangles that carry axial forces without bending when loads are applied at joints/deck.'
+          },
+          2: {
+            heading: 'Step 2: Tension vs. Compression Members',
+            body: 'Under downward deck load <strong>P</strong>, top chords and diagonals in <strong>compression</strong> (red) risk buckling, while bottom chords in <strong>tension</strong> (blue) pull apart.'
+          },
+          3: {
+            heading: 'Step 3: Member Sizing &amp; Structural Safety',
+            body: 'Axial stress <strong>&sigma;<sub>i</sub> = |N<sub>i</sub>| / A<sub>member</sub></strong> must stay below allowable tension or Euler buckling limits.'
+          }
+        },
+        formulas: [
+          '&Sigma;F<sub>x</sub> = 0,   &Sigma;F<sub>y</sub> = 0,   &Sigma;M = 0   (Joint &amp; global equilibrium)',
+          '&sigma;<sub>i</sub> = |N<sub>i</sub>| / A<sub>s</sub>   (Axial member stress)',
+          'P<sub>cr</sub> = &pi;<sup>2</sup> · E · I / (K · L<sub>e</sub>)<sup>2</sup>   (Buckling limit)'
         ]
       }
     };
 
     // =========================================================================
-    // 2. APPLICATION STATE
+    // 2. STATE & PERSISTENCE (SESSION + CUSTOM EXAMPLES)
     // =========================================================================
+    const STORAGE_KEYS = {
+      user: 'engivis_3d_user_v1',
+      examples: 'engivis_3d_custom_examples_v1'
+    };
+
     const state = {
       activeModule: 'beam',
-      activeStep: 1,
+      activeStep: 2,
       isPlaying: true,
       time: 0,
+      activeCustomTitle: '',
 
-      // Module 1: Simply Supported Beam parameters
-      beam: {
-        P: 40,     // Point Load in kN (5 to 100)
-        xRatio: 0.5, // Normalized position x/L (0.1 to 0.9)
-        L: 8.0     // Span in meters (4 to 12)
-      },
+      user: null,
+      customExamples: [],
 
-      // Module 2: Newton's Laws parameters
-      newton: {
-        F: 65,     // Applied Force in N (0 to 150)
-        m: 10,     // Mass in kg (2 to 30)
-        mu: 0.30,  // Friction coefficient (0.0 to 0.8)
-        posX: -5,  // Current X position on track
-        vel: 0     // Current velocity m/s
-      },
+      beam: { P: 45, xRatio: 0.5, L: 8.0 },
+      newton: { F: 70, m: 10, mu: 0.25, posX: -5, vel: 0 },
+      projectile: { v0: 25, angle: 45, g0: 9.81, planet: 'Earth', flightTime: 0 },
+      hydraulics: { Q: 0.45, D1: 1.2, D2: 0.65, rho: 1000 },
+      foundations: { type: 'pad', Qc: 650, areaOrPiles: 6, depth: 2.0 },
+      geology: { dipDeg: 22, depthZ: 12, rho: 2350 },
+      highway: { Waxle: 115, cbr: 12, thickness: 42 },
+      truss: { P: 80, span: 10, bays: 5 },
 
-      // Module 3: Gravity & Projectile parameters
-      projectile: {
-        v0: 24,      // Launch velocity m/s (10 to 40)
-        angle: 45,   // Launch angle degrees (15 to 80)
-        gravity: 9.81, // m/s^2 (Earth 9.81, Mars 3.72, Moon 1.62)
-        planet: 'Earth',
-        flightTime: 0
-      },
-
-      // Custom Orbit Camera spherical coordinates
       camera: {
-        theta: 0.45,
-        phi: 1.12,
-        radius: 14,
-        target: new THREE.Vector3(0, 1.0, 0),
+        theta: 0.48,
+        phi: 1.08,
+        radius: 15,
+        target: new THREE.Vector3(0, 1.1, 0),
         isDragging: false,
         prevX: 0,
         prevY: 0,
@@ -465,51 +737,110 @@
       }
     };
 
+    function loadPersistedData() {
+      try {
+        const savedUser = localStorage.getItem(STORAGE_KEYS.user);
+        if (savedUser) state.user = JSON.parse(savedUser);
+
+        const savedEx = localStorage.getItem(STORAGE_KEYS.examples);
+        if (savedEx) {
+          state.customExamples = JSON.parse(savedEx);
+        } else {
+          state.customExamples = [
+            {
+              id: 'ex-default-1',
+              title: 'Heavy Truck Mid-Span Girder',
+              module: 'beam',
+              p1: 85, p2: 0.5, p3: 10,
+              note: 'High point load at mid-span on a 10 m beam—observe maximum bending moment and lower-fiber tension.'
+            },
+            {
+              id: 'ex-default-2',
+              title: 'Venturi Nozzle Velocity Boost',
+              module: 'hydraulics',
+              p1: 0.6, p2: 1.4, p3: 0.55,
+              note: 'Narrowing pipe from 1.4 m to 0.55 m sharply speeds up flow particles and drops pressure.'
+            }
+          ];
+        }
+      } catch (err) {
+        console.warn('Storage load fallback:', err);
+      }
+      updateUserUI();
+      updateCustomBadge();
+    }
+
+    function saveCustomExamples() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.examples, JSON.stringify(state.customExamples));
+      } catch (err) {
+        console.warn('Storage save fallback:', err);
+      }
+      updateCustomBadge();
+      renderSavedExamplesList();
+    }
+
+    function showToast(text) {
+      const el = document.getElementById('toast-msg');
+      el.textContent = text;
+      el.classList.remove('hidden');
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => el.classList.add('hidden'), 2600);
+    }
+
     // =========================================================================
-    // 3. THREE.JS SCENE SETUP & CUSTOM ORBIT CONTROLS
+    // 3. THREE.JS SCENE & 3D OBJECTS FOR ALL 8 MODULES
     // =========================================================================
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x080c16, 0.022);
+    scene.fog = new THREE.FogExp2(0x070b14, 0.018);
 
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.domElement.classList.add('webgl-canvas');
     container.appendChild(renderer.domElement);
 
-    // Lighting Setup
-    const ambientLight = new THREE.AmbientLight(0xdbeafe, 0.65);
-    scene.add(ambientLight);
+    // Rich 3D Lighting
+    scene.add(new THREE.AmbientLight(0xe2e8f0, 0.72));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.05);
+    keyLight.position.set(11, 18, 13);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(1024, 1024);
+    scene.add(keyLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.95);
-    dirLight.position.set(10, 18, 12);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 1024;
-    dirLight.shadow.mapSize.height = 1024;
-    scene.add(dirLight);
+    const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.45);
+    fillLight.position.set(-12, 9, -9);
+    scene.add(fillLight);
 
-    const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.45);
-    rimLight.position.set(-12, 8, -10);
-    scene.add(rimLight);
+    const warmRim = new THREE.DirectionalLight(0xf59e0b, 0.25);
+    warmRim.position.set(0, 6, -14);
+    scene.add(warmRim);
 
-    // Subtle Engineering Reference Grid
-    const gridHelper = new THREE.GridHelper(36, 36, 0x1e293b, 0x111827);
-    gridHelper.position.y = -0.01;
+    // Reference Floor Grid
+    const gridHelper = new THREE.GridHelper(38, 38, 0x1e293b, 0x0f172a);
+    gridHelper.position.y = -0.02;
     scene.add(gridHelper);
 
-    // Scene Root Groups for each module
-    const beamGroup = new THREE.Group();
-    const newtonGroup = new THREE.Group();
-    const projectileGroup = new THREE.Group();
-    scene.add(beamGroup);
-    scene.add(newtonGroup);
-    scene.add(projectileGroup);
+    // Module Groups
+    const groups = {
+      beam: new THREE.Group(),
+      newton: new THREE.Group(),
+      projectile: new THREE.Group(),
+      hydraulics: new THREE.Group(),
+      foundations: new THREE.Group(),
+      geology: new THREE.Group(),
+      highway: new THREE.Group(),
+      truss: new THREE.Group()
+    };
+    Object.values(groups).forEach(g => scene.add(g));
 
+    // Orbit Camera Controls (Mouse + Touch)
     function updateCameraPosition() {
       const { theta, phi, radius, target } = state.camera;
-      const clampedPhi = Math.max(0.25, Math.min(Math.PI / 2 - 0.04, phi));
+      const clampedPhi = Math.max(0.22, Math.min(Math.PI / 2 - 0.04, phi));
       state.camera.phi = clampedPhi;
       camera.position.x = target.x + radius * Math.sin(clampedPhi) * Math.sin(theta);
       camera.position.y = target.y + radius * Math.cos(clampedPhi);
@@ -517,32 +848,26 @@
       camera.lookAt(target);
     }
 
-    // Mouse & Touch Orbit Interaction
     container.addEventListener('mousedown', (e) => {
       state.camera.isDragging = true;
       state.camera.prevX = e.clientX;
       state.camera.prevY = e.clientY;
     });
-    window.addEventListener('mouseup', () => {
-      state.camera.isDragging = false;
-    });
+    window.addEventListener('mouseup', () => { state.camera.isDragging = false; });
     window.addEventListener('mousemove', (e) => {
       if (!state.camera.isDragging) return;
-      const dx = e.clientX - state.camera.prevX;
-      const dy = e.clientY - state.camera.prevY;
+      state.camera.theta -= (e.clientX - state.camera.prevX) * 0.008;
+      state.camera.phi -= (e.clientY - state.camera.prevY) * 0.008;
       state.camera.prevX = e.clientX;
       state.camera.prevY = e.clientY;
-      state.camera.theta -= dx * 0.008;
-      state.camera.phi -= dy * 0.008;
       updateCameraPosition();
     });
     container.addEventListener('wheel', (e) => {
       e.preventDefault();
-      state.camera.radius = Math.max(6, Math.min(32, state.camera.radius + e.deltaY * 0.01));
+      state.camera.radius = Math.max(6, Math.min(34, state.camera.radius + e.deltaY * 0.01));
       updateCameraPosition();
     }, { passive: false });
 
-    // Touch support (1-finger orbit, 2-finger pinch zoom)
     container.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
         state.camera.isDragging = true;
@@ -550,731 +875,811 @@
         state.camera.prevY = e.touches[0].clientY;
       } else if (e.touches.length === 2) {
         state.camera.isDragging = false;
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        state.camera.pinchDist = Math.hypot(dx, dy);
+        state.camera.pinchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
       }
     }, { passive: true });
 
     container.addEventListener('touchmove', (e) => {
       if (e.touches.length === 1 && state.camera.isDragging) {
-        const dx = e.touches[0].clientX - state.camera.prevX;
-        const dy = e.touches[0].clientY - state.camera.prevY;
+        state.camera.theta -= (e.touches[0].clientX - state.camera.prevX) * 0.009;
+        state.camera.phi -= (e.touches[0].clientY - state.camera.prevY) * 0.009;
         state.camera.prevX = e.touches[0].clientX;
         state.camera.prevY = e.touches[0].clientY;
-        state.camera.theta -= dx * 0.009;
-        state.camera.phi -= dy * 0.009;
         updateCameraPosition();
       } else if (e.touches.length === 2) {
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const dist = Math.hypot(dx, dy);
-        const delta = state.camera.pinchDist - dist;
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        state.camera.radius = Math.max(6, Math.min(34, state.camera.radius + (state.camera.pinchDist - dist) * 0.04));
         state.camera.pinchDist = dist;
-        state.camera.radius = Math.max(6, Math.min(32, state.camera.radius + delta * 0.04));
         updateCameraPosition();
       }
     }, { passive: true });
 
-    container.addEventListener('touchend', () => {
-      state.camera.isDragging = false;
-    });
+    container.addEventListener('touchend', () => { state.camera.isDragging = false; });
 
-    // Helper: Create 3D Arrow Mesh (Shaft + Cone Head)
     function create3DArrow(colorHex) {
       const group = new THREE.Group();
       const mat = new THREE.MeshStandardMaterial({
         color: colorHex,
         emissive: colorHex,
         emissiveIntensity: 0.25,
-        roughness: 0.3
+        roughness: 0.3,
+        metalness: 0.15
       });
-      const shaftGeo = new THREE.CylinderGeometry(0.08, 0.08, 1, 16);
+      const shaftGeo = new THREE.CylinderGeometry(0.08, 0.08, 1, 14);
       shaftGeo.translate(0, 0.5, 0);
       const shaft = new THREE.Mesh(shaftGeo, mat);
 
-      const headGeo = new THREE.ConeGeometry(0.22, 0.45, 20);
+      const headGeo = new THREE.ConeGeometry(0.22, 0.45, 18);
       headGeo.translate(0, 0.225, 0);
       const head = new THREE.Mesh(headGeo, mat);
 
-      group.add(shaft);
-      group.add(head);
-      group.userData = { shaft, head, mat };
+      group.add(shaft, head);
+      group.userData = { shaft, head };
       return group;
     }
 
-    function setArrowLength(arrow, length) {
-      const clamped = Math.max(0.01, length);
-      const headLen = Math.min(0.45, clamped * 0.4);
-      const shaftLen = Math.max(0.01, clamped - headLen);
-      arrow.userData.shaft.scale.set(1, shaftLen, 1);
-      arrow.userData.head.position.y = shaftLen;
-      arrow.userData.head.scale.set(1, headLen / 0.45, 1);
+    function setArrowLength(arrow, len) {
+      const c = Math.max(0.05, len);
+      const headL = Math.min(0.45, c * 0.38);
+      const shaftL = Math.max(0.02, c - headL);
+      arrow.userData.shaft.scale.set(1, shaftL, 1);
+      arrow.userData.head.position.y = shaftL;
+      arrow.userData.head.scale.set(1, headL / 0.45, 1);
     }
 
-    // =========================================================================
-    // 4. MODULE 1 BUILDER: SIMPLY SUPPORTED BEAM & BENDING MOMENT
-    // =========================================================================
+    // --- MODULE 1: BEAM ---
     const beamObjs = {};
-    function initBeamScene() {
-      // High-resolution segmented box geometry so we can deform vertices smoothly
-      // and apply vertex colors for compression (top) vs tension (bottom)
-      const segsX = 64;
-      const segsY = 6;
-      const segsZ = 4;
-      const geo = new THREE.BoxGeometry(10, 0.65, 0.9, segsX, segsY, segsZ);
-
-      // Initialize vertex colors
-      const count = geo.attributes.position.count;
-      const colors = new Float32Array(count * 3);
+    function buildBeam() {
+      const geo = new THREE.BoxGeometry(10, 0.68, 0.95, 64, 6, 4);
+      const colors = new Float32Array(geo.attributes.position.count * 3);
       geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-      geo.userData.basePositions = Float32Array.from(geo.attributes.position.array);
+      geo.userData.base = Float32Array.from(geo.attributes.position.array);
 
-      const mat = new THREE.MeshStandardMaterial({
-        vertexColors: true,
-        roughness: 0.35,
-        metalness: 0.2
-      });
-      const beamMesh = new THREE.Mesh(geo, mat);
-      beamMesh.castShadow = true;
-      beamMesh.position.y = 1.6;
-      beamGroup.add(beamMesh);
-      beamObjs.mesh = beamMesh;
+      const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+        vertexColors: true, roughness: 0.3, metalness: 0.22
+      }));
+      mesh.castShadow = true;
+      mesh.position.y = 1.65;
+      groups.beam.add(mesh);
+      beamObjs.mesh = mesh;
 
-      // Left Pin Support (Triangle Prism + Base)
-      const pinGroup = new THREE.Group();
-      const coneGeo = new THREE.ConeGeometry(0.55, 0.9, 4);
-      coneGeo.rotateY(Math.PI / 4);
-      const supportMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.5, roughness: 0.4 });
-      const pinCone = new THREE.Mesh(coneGeo, supportMat);
-      pinCone.position.y = 0.82;
-      const basePlate = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.22, 1.3), supportMat);
-      basePlate.position.y = 0.26;
-      pinGroup.add(pinCone, basePlate);
-      beamGroup.add(pinGroup);
-      beamObjs.pinSupport = pinGroup;
+      const supMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.55, roughness: 0.35 });
+      const pin = new THREE.Group();
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.9, 4), supMat);
+      cone.rotation.y = Math.PI / 4;
+      cone.position.y = 0.85;
+      const baseL = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.24, 1.3), supMat);
+      baseL.position.y = 0.26;
+      pin.add(cone, baseL);
 
-      // Right Roller Support (Triangle + Cylindrical Rollers + Base)
-      const rollerGroup = new THREE.Group();
-      const rollerTop = new THREE.Mesh(coneGeo, supportMat);
-      rollerTop.position.y = 0.92;
-      const wheelMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.6, roughness: 0.3 });
-      const wheel1 = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 1.0, 16), wheelMat);
-      wheel1.rotation.x = Math.PI / 2;
-      wheel1.position.set(-0.25, 0.38, 0);
-      const wheel2 = wheel1.clone();
-      wheel2.position.x = 0.25;
-      const rollerBase = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.2, 1.3), supportMat);
-      rollerBase.position.y = 0.14;
-      rollerGroup.add(rollerTop, wheel1, wheel2, rollerBase);
-      beamGroup.add(rollerGroup);
-      beamObjs.rollerSupport = rollerGroup;
+      const roller = new THREE.Group();
+      const rCone = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.85, 4), supMat);
+      rCone.rotation.y = Math.PI / 4;
+      rCone.position.y = 0.92;
+      const wheelMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.6, roughness: 0.25 });
+      const w1 = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 1.0, 14), wheelMat);
+      w1.rotation.x = Math.PI / 2;
+      w1.position.set(-0.24, 0.38, 0);
+      const w2 = w1.clone();
+      w2.position.x = 0.24;
+      const baseR = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.2, 1.3), supMat);
+      baseR.position.y = 0.14;
+      roller.add(rCone, w1, w2, baseR);
 
-      // Downward Point Load Arrow (Amber)
-      const loadArrow = create3DArrow(0xf59e0b);
-      loadArrow.rotation.z = Math.PI; // Points downward
-      beamGroup.add(loadArrow);
-      beamObjs.loadArrow = loadArrow;
+      groups.beam.add(pin, roller);
+      beamObjs.pin = pin;
+      beamObjs.roller = roller;
 
-      // Upward Reaction Force Arrows R1 & R2 (Emerald)
-      const r1Arrow = create3DArrow(0x10b981);
-      const r2Arrow = create3DArrow(0x10b981);
-      beamGroup.add(r1Arrow, r2Arrow);
-      beamObjs.r1Arrow = r1Arrow;
-      beamObjs.r2Arrow = r2Arrow;
+      beamObjs.loadArrow = create3DArrow(0xf59e0b);
+      beamObjs.loadArrow.rotation.z = Math.PI;
+      beamObjs.raArrow = create3DArrow(0x10b981);
+      beamObjs.rbArrow = create3DArrow(0x10b981);
+      groups.beam.add(beamObjs.loadArrow, beamObjs.raArrow, beamObjs.rbArrow);
     }
 
-    function updateBeamSimulation(dt) {
+    function updateBeam() {
       const { P, xRatio, L } = state.beam;
       const x = xRatio * L;
-      const R1 = (P * (L - x)) / L;
-      const R2 = (P * x) / L;
+      const RA = (P * (L - x)) / L;
+      const RB = (P * x) / L;
       const Mmax = (P * x * (L - x)) / L;
 
-      // Map span L (4..12m) to 3D world width (6..11 units)
-      const visualSpan = 5.5 + (L - 4) * 0.68;
-      const halfSpan = visualSpan / 2;
+      const visSpan = 5.5 + (L - 4) * 0.68;
+      const half = visSpan / 2;
+      beamObjs.pin.position.x = -half;
+      beamObjs.roller.position.x = half;
 
-      // Position supports at ends of visualSpan
-      beamObjs.pinSupport.position.x = -halfSpan;
-      beamObjs.rollerSupport.position.x = halfSpan;
-
-      // Compute exact Euler-Bernoulli deflection shape along beam:
-      // y(u) normalized so peak visual sag scales cleanly with Mmax
       const a = xRatio;
       const b = 1 - xRatio;
-      // Subtle breathing pulse when playing so student sees load action
-      const pulse = state.isPlaying ? (0.94 + 0.06 * Math.sin(state.time * 3.2)) : 1.0;
-      const maxVisualSag = Math.min(1.45, (Mmax / 180) * 1.35) * pulse;
-
-      // Normalized peak factor at u = a: a^2 * b^2 / 3
+      const pulse = state.isPlaying ? (0.95 + 0.05 * Math.sin(state.time * 3)) : 1;
+      const maxSag = Math.min(1.45, (Mmax / 180) * 1.35) * pulse;
       const peakFactor = Math.max(0.0001, (a * a * b * b) / 3);
 
       const geo = beamObjs.mesh.geometry;
-      const posAttr = geo.attributes.position;
-      const colAttr = geo.attributes.color;
-      const base = geo.userData.basePositions;
+      const pos = geo.attributes.position;
+      const col = geo.attributes.color;
+      const base = geo.userData.base;
 
-      for (let i = 0; i < posAttr.count; i++) {
-        const bx = base[i * 3];     // -5 to +5
-        const by = base[i * 3 + 1]; // -0.325 to +0.325
+      for (let i = 0; i < pos.count; i++) {
+        const bx = base[i * 3];
+        const by = base[i * 3 + 1];
         const bz = base[i * 3 + 2];
-
-        // Normalized position u in [0, 1]
         const u = (bx + 5) / 10;
-        const scaledX = (u - 0.5) * visualSpan;
+        const wx = (u - 0.5) * visSpan;
 
-        // Exact piecewise cubic deflection curve for point load at u = a
         let shape = 0;
-        if (u <= a) {
-          shape = (b * u * (1 - b * b - u * u)) / 6;
-        } else {
-          const uRev = 1 - u;
-          shape = (a * uRev * (1 - a * a - uRev * uRev)) / 6;
+        if (u <= a) shape = (b * u * (1 - b * b - u * u)) / 6;
+        else {
+          const ur = 1 - u;
+          shape = (a * ur * (1 - a * a - ur * ur)) / 6;
         }
-        const deflection = (shape / peakFactor) * maxVisualSag;
+        const sag = (shape / peakFactor) * maxSag;
+        pos.setXYZ(i, wx, by - sag, bz);
 
-        posAttr.setXYZ(i, scaledX, by - deflection, bz);
-
-        // Local bending moment ratio at u (triangular peaking at u = a)
-        const momentRatio = u <= a ? (u / Math.max(0.01, a)) : ((1 - u) / Math.max(0.01, b));
-        const stressIntensity = Math.min(1, (Mmax / 150) * momentRatio);
-
-        // Step 1 highlights neutral blue-slate; Step 2 & 3 highlight Compression (Red) & Tension (Cyan)
+        const mRatio = u <= a ? (u / Math.max(0.01, a)) : ((1 - u) / Math.max(0.01, b));
+        const stress = Math.min(1, (Mmax / 150) * mRatio);
+        const fiber = by / 0.34;
         if (state.activeStep === 1) {
-          colAttr.setXYZ(i, 0.35, 0.48, 0.65);
+          col.setXYZ(i, 0.38, 0.52, 0.72);
+        } else if (fiber > 0.05) {
+          const t = fiber * stress;
+          col.setXYZ(i, 0.35 + 0.65 * t, 0.45 - 0.3 * t, 0.6 - 0.45 * t);
+        } else if (fiber < -0.05) {
+          const t = Math.abs(fiber) * stress;
+          col.setXYZ(i, 0.35 - 0.25 * t, 0.45 + 0.38 * t, 0.6 + 0.4 * t);
         } else {
-          // Top fibers (by > 0) = Compression (warm crimson/orange), Bottom fibers (by < 0) = Tension (electric sky blue)
-          const fiberNorm = by / 0.325; // -1 to +1
-          if (fiberNorm > 0.05) {
-            const t = fiberNorm * stressIntensity;
-            colAttr.setXYZ(i, 0.35 + 0.65 * t, 0.45 - 0.30 * t, 0.60 - 0.45 * t);
-          } else if (fiberNorm < -0.05) {
-            const t = Math.abs(fiberNorm) * stressIntensity;
-            colAttr.setXYZ(i, 0.35 - 0.25 * t, 0.45 + 0.38 * t, 0.60 + 0.40 * t);
-          } else {
-            // Neutral axis stays neutral gray-white
-            colAttr.setXYZ(i, 0.75, 0.80, 0.88);
-          }
+          col.setXYZ(i, 0.78, 0.84, 0.92);
         }
       }
-      posAttr.needsUpdate = true;
-      colAttr.needsUpdate = true;
+      pos.needsUpdate = true;
+      col.needsUpdate = true;
       geo.computeVertexNormals();
 
-      // Position & scale Load Arrow P directly on top of deflected beam at u = a
-      const loadWorldX = (xRatio - 0.5) * visualSpan;
-      const loadTipY = 1.6 + 0.34 - maxVisualSag;
-      const loadLen = 0.8 + (P / 100) * 1.6;
-      beamObjs.loadArrow.position.set(loadWorldX, loadTipY + loadLen, 0);
+      const lx = (xRatio - 0.5) * visSpan;
+      const loadLen = 0.75 + (P / 100) * 1.5;
+      beamObjs.loadArrow.position.set(lx, 1.65 + 0.35 - maxSag + loadLen, 0);
       setArrowLength(beamObjs.loadArrow, loadLen);
 
-      // Position & scale Reaction Arrows R1, R2
-      const r1Len = 0.4 + (R1 / 100) * 1.4;
-      const r2Len = 0.4 + (R2 / 100) * 1.4;
-      beamObjs.r1Arrow.position.set(-halfSpan, 0.1, 0.85);
-      setArrowLength(beamObjs.r1Arrow, r1Len);
-      beamObjs.r2Arrow.position.set(halfSpan, 0.1, 0.85);
-      setArrowLength(beamObjs.r2Arrow, r2Len);
+      beamObjs.raArrow.position.set(-half, 0.1, 0.9);
+      setArrowLength(beamObjs.raArrow, 0.4 + (RA / 100) * 1.3);
+      beamObjs.rbArrow.position.set(half, 0.1, 0.9);
+      setArrowLength(beamObjs.rbArrow, 0.4 + (RB / 100) * 1.3);
 
-      // Step visibility emphasis
-      beamObjs.loadArrow.visible = state.activeStep >= 2;
-      beamObjs.r1Arrow.visible = state.activeStep >= 2;
-      beamObjs.r2Arrow.visible = state.activeStep >= 2;
-
-      // Update SFD & BMD 2D Canvases
-      drawBeamDiagrams(L, x, P, R1, R2, Mmax);
+      drawBeamDiagrams(L, x, RA, RB, Mmax);
     }
 
-    function drawBeamDiagrams(L, x, P, R1, R2, Mmax) {
-      const sfdCanvas = document.getElementById('sfd-canvas');
-      const bmdCanvas = document.getElementById('bmd-canvas');
-      if (!sfdCanvas || !bmdCanvas) return;
-
-      // Resize canvas crisp to container
-      [sfdCanvas, bmdCanvas].forEach((c) => {
-        const rect = c.getBoundingClientRect();
-        if (rect.width > 0 && (c.width !== Math.floor(rect.width * 2) || c.height !== Math.floor(rect.height * 2))) {
-          c.width = Math.floor(rect.width * 2);
-          c.height = Math.floor(rect.height * 2);
+    function drawBeamDiagrams(L, x, RA, RB, Mmax) {
+      const sfd = document.getElementById('sfd-canvas');
+      const bmd = document.getElementById('bmd-canvas');
+      if (!sfd || !bmd) return;
+      [sfd, bmd].forEach(c => {
+        const r = c.getBoundingClientRect();
+        if (r.width > 0 && (c.width !== Math.floor(r.width * 2) || c.height !== Math.floor(r.height * 2))) {
+          c.width = Math.floor(r.width * 2);
+          c.height = Math.floor(r.height * 2);
         }
       });
 
-      // --- 1. SHEAR FORCE DIAGRAM (SFD) ---
-      const ctxS = sfdCanvas.getContext('2d');
-      const w = sfdCanvas.width;
-      const h = sfdCanvas.height;
+      const ctxS = sfd.getContext('2d');
+      const w = sfd.width, h = sfd.height;
       ctxS.clearRect(0, 0, w, h);
+      const pad = 24, uw = w - pad * 2, midY = h / 2;
+      const lx = pad + (x / L) * uw;
+      const yA = midY - (RA / 100) * (h * 0.38);
+      const yB = midY + (RB / 100) * (h * 0.38);
 
-      const padX = 24;
-      const usableW = w - padX * 2;
-      const midY = h / 2;
-      const loadX = padX + (x / L) * usableW;
-      const maxScaleV = 100; // max possible P
-      const yR1 = midY - (R1 / maxScaleV) * (h * 0.38);
-      const yR2 = midY + (R2 / maxScaleV) * (h * 0.38);
+      ctxS.strokeStyle = '#334155'; ctxS.lineWidth = 2;
+      ctxS.beginPath(); ctxS.moveTo(pad, midY); ctxS.lineTo(w - pad, midY); ctxS.stroke();
 
-      // Zero baseline
-      ctxS.strokeStyle = '#334155';
-      ctxS.lineWidth = 2;
+      ctxS.fillStyle = 'rgba(16,185,129,0.22)';
+      ctxS.fillRect(pad, yA, lx - pad, midY - yA);
+      ctxS.fillStyle = 'rgba(244,63,94,0.22)';
+      ctxS.fillRect(lx, midY, (w - pad) - lx, yB - midY);
+
+      ctxS.strokeStyle = '#10b981'; ctxS.lineWidth = 3;
       ctxS.beginPath();
-      ctxS.moveTo(padX, midY);
-      ctxS.lineTo(w - padX, midY);
+      ctxS.moveTo(pad, midY); ctxS.lineTo(pad, yA); ctxS.lineTo(lx, yA);
+      ctxS.lineTo(lx, yB); ctxS.lineTo(w - pad, yB); ctxS.lineTo(w - pad, midY);
       ctxS.stroke();
 
-      // Positive Shear Fill (+R1)
-      ctxS.fillStyle = 'rgba(16, 185, 129, 0.22)';
-      ctxS.fillRect(padX, yR1, loadX - padX, midY - yR1);
-
-      // Negative Shear Fill (-R2)
-      ctxS.fillStyle = 'rgba(244, 63, 94, 0.22)';
-      ctxS.fillRect(loadX, midY, (w - padX) - loadX, yR2 - midY);
-
-      // SFD Outline
-      ctxS.strokeStyle = '#10b981';
-      ctxS.lineWidth = 3;
-      ctxS.beginPath();
-      ctxS.moveTo(padX, midY);
-      ctxS.lineTo(padX, yR1);
-      ctxS.lineTo(loadX, yR1);
-      ctxS.lineTo(loadX, yR2);
-      ctxS.lineTo(w - padX, yR2);
-      ctxS.lineTo(w - padX, midY);
-      ctxS.stroke();
-
-      // Labels
-      ctxS.fillStyle = '#a7f3d0';
-      ctxS.font = 'bold 20px JetBrains Mono, monospace';
-      ctxS.fillText(`+${R1.toFixed(1)} kN`, padX + 6, Math.max(22, yR1 - 6));
-      ctxS.fillStyle = '#fecdd3';
-      ctxS.fillText(`-${R2.toFixed(1)} kN`, loadX + 6, Math.min(h - 8, yR2 + 20));
-
-      // --- 2. BENDING MOMENT DIAGRAM (BMD) ---
-      const ctxB = bmdCanvas.getContext('2d');
+      const ctxB = bmd.getContext('2d');
       ctxB.clearRect(0, 0, w, h);
-      const topY = 22;
-      const baseB = h - 22;
-      const peakY = baseB - Math.min(1, Mmax / 220) * (baseB - topY);
+      const topY = 20, baseY = h - 20;
+      const peakY = baseY - Math.min(1, Mmax / 250) * (baseY - topY);
 
-      // Baseline
-      ctxB.strokeStyle = '#334155';
-      ctxB.lineWidth = 2;
-      ctxB.beginPath();
-      ctxB.moveTo(padX, baseB);
-      ctxB.lineTo(w - padX, baseB);
-      ctxB.stroke();
+      ctxB.strokeStyle = '#334155'; ctxB.lineWidth = 2;
+      ctxB.beginPath(); ctxB.moveTo(pad, baseY); ctxB.lineTo(w - pad, baseY); ctxB.stroke();
 
-      // Triangle Fill
-      ctxB.fillStyle = 'rgba(245, 158, 11, 0.25)';
-      ctxB.beginPath();
-      ctxB.moveTo(padX, baseB);
-      ctxB.lineTo(loadX, peakY);
-      ctxB.lineTo(w - padX, baseB);
-      ctxB.closePath();
-      ctxB.fill();
+      ctxB.fillStyle = 'rgba(245,158,11,0.25)';
+      ctxB.beginPath(); ctxB.moveTo(pad, baseY); ctxB.lineTo(lx, peakY); ctxB.lineTo(w - pad, baseY); ctxB.closePath(); ctxB.fill();
 
-      // BMD Stroke
-      ctxB.strokeStyle = '#f59e0b';
-      ctxB.lineWidth = 3;
-      ctxB.beginPath();
-      ctxB.moveTo(padX, baseB);
-      ctxB.lineTo(loadX, peakY);
-      ctxB.lineTo(w - padX, baseB);
-      ctxB.stroke();
-
-      // Peak Dot & Label
-      ctxB.fillStyle = '#fbbf24';
-      ctxB.beginPath();
-      ctxB.arc(loadX, peakY, 5, 0, Math.PI * 2);
-      ctxB.fill();
-      ctxB.font = 'bold 20px JetBrains Mono, monospace';
-      const labelX = Math.min(w - 155, Math.max(padX + 6, loadX - 50));
-      ctxB.fillText(`M_max: ${Mmax.toFixed(1)} kN·m`, labelX, Math.max(20, peakY - 10));
+      ctxB.strokeStyle = '#f59e0b'; ctxB.lineWidth = 3;
+      ctxB.beginPath(); ctxB.moveTo(pad, baseY); ctxB.lineTo(lx, peakY); ctxB.lineTo(w - pad, baseY); ctxB.stroke();
     }
 
-    // =========================================================================
-    // 5. MODULE 2 BUILDER: NEWTON'S LAWS & FREE-BODY DYNAMICS
-    // =========================================================================
+    // --- MODULE 2: NEWTON ---
     const newtonObjs = {};
-    function initNewtonScene() {
-      // Track surface
-      const trackGeo = new THREE.BoxGeometry(24, 0.3, 4.5);
-      const trackMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 });
-      const track = new THREE.Mesh(trackGeo, trackMat);
+    function buildNewton() {
+      const track = new THREE.Mesh(
+        new THREE.BoxGeometry(24, 0.3, 4.4),
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 })
+      );
       track.position.y = -0.15;
       track.receiveShadow = true;
-      newtonGroup.add(track);
+      groups.newton.add(track);
 
-      // Distance tick markers along the track
-      const tickMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-      for (let x = -10; x <= 10; x += 2) {
-        const tick = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 3.8), tickMat);
-        tick.position.set(x, 0.01, 0);
-        newtonGroup.add(tick);
-      }
-
-      // Dynamic Mass Block
-      const blockGeo = new THREE.BoxGeometry(1.8, 1.4, 1.8);
-      const blockMat = new THREE.MeshStandardMaterial({
-        color: 0x3b82f6,
-        metalness: 0.35,
-        roughness: 0.3
-      });
-      const block = new THREE.Mesh(blockGeo, blockMat);
+      const block = new THREE.Mesh(
+        new THREE.BoxGeometry(1.7, 1.35, 1.7),
+        new THREE.MeshStandardMaterial({ color: 0x2563eb, metalness: 0.35, roughness: 0.3 })
+      );
       block.castShadow = true;
-      block.position.set(-5, 0.7, 0);
-      newtonGroup.add(block);
+      groups.newton.add(block);
       newtonObjs.block = block;
 
-      // 4 Free-Body Force Arrows attached to Block
-      const fApplied = create3DArrow(0x10b981); // Emerald right (+X)
-      fApplied.rotation.z = -Math.PI / 2;
-
-      const fFriction = create3DArrow(0xf43f5e); // Crimson left (-X)
-      fFriction.rotation.z = Math.PI / 2;
-
-      const fNormal = create3DArrow(0x38bdf8);   // Sky blue up (+Y)
-
-      const fGravity = create3DArrow(0xf59e0b);  // Amber down (-Y)
-      fGravity.rotation.z = Math.PI;
-
-      block.add(fApplied, fFriction, fNormal, fGravity);
-      newtonObjs.fApplied = fApplied;
-      newtonObjs.fFriction = fFriction;
-      newtonObjs.fNormal = fNormal;
-      newtonObjs.fGravity = fGravity;
+      newtonObjs.fApp = create3DArrow(0x10b981); newtonObjs.fApp.rotation.z = -Math.PI / 2;
+      newtonObjs.fFric = create3DArrow(0xf43f5e); newtonObjs.fFric.rotation.z = Math.PI / 2;
+      newtonObjs.fNorm = create3DArrow(0x38bdf8);
+      newtonObjs.fGrav = create3DArrow(0xf59e0b); newtonObjs.fGrav.rotation.z = Math.PI;
+      block.add(newtonObjs.fApp, newtonObjs.fFric, newtonObjs.fNorm, newtonObjs.fGrav);
     }
 
-    function updateNewtonSimulation(dt) {
+    function updateNewton(dt) {
       const { F, m, mu } = state.newton;
-      const g = 9.81;
-      const N = m * g;
+      const N = m * 9.81;
       const fMax = mu * N;
-      const fActual = F <= fMax ? F : fMax;
-      const fNet = Math.max(0, F - fMax);
-      const accel = fNet / m;
+      const fAct = Math.min(F, fMax);
+      const a = Math.max(0, F - fMax) / m;
 
-      // Scale block subtly with mass m (2..30 kg)
-      const scaleFactor = 0.75 + (m / 30) * 0.65;
-      newtonObjs.block.scale.set(scaleFactor, scaleFactor, scaleFactor);
-      newtonObjs.block.position.y = 0.7 * scaleFactor;
+      const sc = 0.75 + (m / 30) * 0.6;
+      newtonObjs.block.scale.set(sc, sc, sc);
+      newtonObjs.block.position.y = 0.675 * sc;
 
-      // Update kinetic motion if playing and Step >= 2
       if (state.isPlaying && state.activeStep >= 2) {
-        if (accel > 0.001) {
-          state.newton.vel += accel * dt * 0.45;
+        if (a > 0.001) {
+          state.newton.vel += a * dt * 0.45;
           state.newton.posX += state.newton.vel * dt;
           if (state.newton.posX > 9.5) {
             state.newton.posX = -9.5;
-            state.newton.vel = Math.min(state.newton.vel, 4.5);
+            state.newton.vel = Math.min(state.newton.vel, 4);
           }
         } else {
-          // Decelerate smoothly if friction exceeds applied force
           state.newton.vel = Math.max(0, state.newton.vel - 4 * dt);
           state.newton.posX += state.newton.vel * dt;
         }
       }
       newtonObjs.block.position.x = state.newton.posX;
 
-      // Update Free-Body Vector Arrows
-      const showForces = state.activeStep >= 2;
-      newtonObjs.fApplied.visible = showForces && F > 0;
-      newtonObjs.fFriction.visible = showForces && fActual > 0;
-      newtonObjs.fNormal.visible = true;
-      newtonObjs.fGravity.visible = true;
-
-      newtonObjs.fApplied.position.set(0.9, 0, 0);
-      setArrowLength(newtonObjs.fApplied, 0.3 + (F / 150) * 2.4);
-
-      newtonObjs.fFriction.position.set(-0.9, -0.45, 0);
-      setArrowLength(newtonObjs.fFriction, 0.3 + (fActual / 150) * 2.4);
-
-      const vertLen = 0.5 + (N / 300) * 1.6;
-      newtonObjs.fNormal.position.set(0, 0.7, 0);
-      setArrowLength(newtonObjs.fNormal, vertLen);
-
-      newtonObjs.fGravity.position.set(0, -0.7, 0);
-      setArrowLength(newtonObjs.fGravity, vertLen);
+      newtonObjs.fApp.position.set(0.85, 0, 0);
+      setArrowLength(newtonObjs.fApp, 0.3 + (F / 150) * 2.2);
+      newtonObjs.fFric.position.set(-0.85, -0.4, 0);
+      setArrowLength(newtonObjs.fFric, 0.3 + (fAct / 150) * 2.2);
+      newtonObjs.fNorm.position.set(0, 0.68, 0);
+      setArrowLength(newtonObjs.fNorm, 0.5 + (N / 300) * 1.5);
+      newtonObjs.fGrav.position.set(0, -0.68, 0);
+      setArrowLength(newtonObjs.fGrav, 0.5 + (N / 300) * 1.5);
     }
 
-    // =========================================================================
-    // 6. MODULE 3 BUILDER: GRAVITY & PROJECTILE TRAJECTORY
-    // =========================================================================
+    // --- MODULE 3: PROJECTILE ---
     const projObjs = {};
-    function initProjectileScene() {
-      // Ground landing strip
+    function buildProjectile() {
       const ground = new THREE.Mesh(
         new THREE.BoxGeometry(28, 0.25, 5),
         new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 })
       );
-      ground.position.set(2, -0.125, 0);
-      projectileGroup.add(ground);
+      ground.position.set(1, -0.125, 0);
+      groups.projectile.add(ground);
 
-      // Launch Cannon / Platform at x = -9
-      const base = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.65, 0.85, 0.5, 24),
-        new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.5, roughness: 0.4 })
-      );
-      base.position.set(-9, 0.25, 0);
-      projectileGroup.add(base);
-
-      const barrelPivot = new THREE.Group();
-      barrelPivot.position.set(-9, 0.55, 0);
-      const barrelGeo = new THREE.CylinderGeometry(0.22, 0.26, 1.5, 20);
+      const pivot = new THREE.Group();
+      pivot.position.set(-9.5, 0.55, 0);
+      const barrelGeo = new THREE.CylinderGeometry(0.2, 0.24, 1.4, 18);
       barrelGeo.rotateZ(-Math.PI / 2);
-      barrelGeo.translate(0.65, 0, 0);
-      const barrel = new THREE.Mesh(
-        barrelGeo,
-        new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.6, roughness: 0.25 })
-      );
-      barrelPivot.add(barrel);
-      projectileGroup.add(barrelPivot);
-      projObjs.barrelPivot = barrelPivot;
+      barrelGeo.translate(0.6, 0, 0);
+      pivot.add(new THREE.Mesh(barrelGeo, new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.6, roughness: 0.25 })));
+      groups.projectile.add(pivot);
+      projObjs.pivot = pivot;
 
-      // Projectile Sphere
       const sphere = new THREE.Mesh(
-        new THREE.SphereGeometry(0.32, 24, 24),
-        new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.35 })
+        new THREE.SphereGeometry(0.32, 22, 22),
+        new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.3 })
       );
-      projectileGroup.add(sphere);
+      groups.projectile.add(sphere);
       projObjs.sphere = sphere;
 
-      // Live Velocity Component Vectors (vx emerald, vy sky blue)
-      const vxArrow = create3DArrow(0x10b981);
-      vxArrow.rotation.z = -Math.PI / 2;
-      const vyArrow = create3DArrow(0x38bdf8);
-      sphere.add(vxArrow, vyArrow);
-      projObjs.vxArrow = vxArrow;
-      projObjs.vyArrow = vyArrow;
+      projObjs.vxArrow = create3DArrow(0x10b981); projObjs.vxArrow.rotation.z = -Math.PI / 2;
+      projObjs.vyArrow = create3DArrow(0x38bdf8);
+      sphere.add(projObjs.vxArrow, projObjs.vyArrow);
 
-      // Parabolic Trajectory Preview Line
+      const pts = 80;
       const lineGeo = new THREE.BufferGeometry();
-      const maxPts = 80;
-      lineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxPts * 3), 3));
-      const lineMat = new THREE.LineBasicMaterial({ color: 0xfbbf24, linewidth: 2 });
-      const trajectoryLine = new THREE.Line(lineGeo, lineMat);
-      projectileGroup.add(trajectoryLine);
-      projObjs.trajectoryLine = trajectoryLine;
-      projObjs.maxPts = maxPts;
+      lineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts * 3), 3));
+      projObjs.line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0xfbbf24 }));
+      groups.projectile.add(projObjs.line);
+      projObjs.pts = pts;
     }
 
-    function updateProjectileSimulation(dt) {
-      const { v0, angle, gravity } = state.projectile;
+    function updateProjectile(dt) {
+      const { v0, angle, g0 } = state.projectile;
       const rad = (angle * Math.PI) / 180;
       const vx = v0 * Math.cos(rad);
       const vy0 = v0 * Math.sin(rad);
-
-      const tTotal = (2 * vy0) / gravity;
-      const hMax = (vy0 * vy0) / (2 * gravity);
+      const tTotal = (2 * vy0) / g0;
       const range = vx * tTotal;
+      const scale = range > 180 ? 19.5 / range : 0.12;
+      const sx = -9.5, sy = 0.55;
 
-      // Scale real meters cleanly into our 20-unit visual arena
-      // Max theoretical range on Moon (v0=40, 45deg, g=1.62) is ~987m; Earth max is ~163m
-      const worldScale = range > 180 ? (19 / range) : 0.12;
-      const startX = -9;
-      const startY = 0.55;
-
-      // Rotate launch barrel
-      projObjs.barrelPivot.rotation.z = rad;
-
-      // Update Parabolic Trajectory Curve
-      const posAttr = projObjs.trajectoryLine.geometry.attributes.position;
-      for (let i = 0; i < projObjs.maxPts; i++) {
-        const frac = i / (projObjs.maxPts - 1);
-        const t = frac * tTotal;
-        const px = startX + vx * t * worldScale;
-        const py = Math.max(0.15, startY + (vy0 * t - 0.5 * gravity * t * t) * worldScale);
-        posAttr.setXYZ(i, px, py, 0);
+      projObjs.pivot.rotation.z = rad;
+      const pos = projObjs.line.geometry.attributes.position;
+      for (let i = 0; i < projObjs.pts; i++) {
+        const t = (i / (projObjs.pts - 1)) * tTotal;
+        pos.setXYZ(i, sx + vx * t * scale, Math.max(0.15, sy + (vy0 * t - 0.5 * g0 * t * t) * scale), 0);
       }
-      posAttr.needsUpdate = true;
+      pos.needsUpdate = true;
 
-      // Advance flight clock
       if (state.isPlaying && state.activeStep >= 2) {
         state.projectile.flightTime += dt * 1.15;
-        if (state.projectile.flightTime > tTotal + 0.45) {
-          state.projectile.flightTime = 0;
-        }
+        if (state.projectile.flightTime > tTotal + 0.4) state.projectile.flightTime = 0;
       }
-
       const tCur = state.activeStep === 1 ? 0 : Math.min(tTotal, state.projectile.flightTime);
-      const curX = startX + vx * tCur * worldScale;
-      const curY = startY + (vy0 * tCur - 0.5 * gravity * tCur * tCur) * worldScale;
-      const curVy = vy0 - gravity * tCur;
-
-      projObjs.sphere.position.set(curX, Math.max(0.32, curY), 0);
-
-      // Update vx and vy vectors on sphere
-      projObjs.vxArrow.visible = true;
-      setArrowLength(projObjs.vxArrow, 0.3 + (vx / 40) * 1.8);
-
+      const curVy = vy0 - g0 * tCur;
+      projObjs.sphere.position.set(
+        sx + vx * tCur * scale,
+        Math.max(0.32, sy + (vy0 * tCur - 0.5 * g0 * tCur * tCur) * scale),
+        0
+      );
+      setArrowLength(projObjs.vxArrow, 0.3 + (vx / 40) * 1.6);
       projObjs.vyArrow.visible = Math.abs(curVy) > 0.3;
       projObjs.vyArrow.rotation.z = curVy >= 0 ? 0 : Math.PI;
-      setArrowLength(projObjs.vyArrow, 0.25 + (Math.abs(curVy) / 40) * 1.8);
+      setArrowLength(projObjs.vyArrow, 0.25 + (Math.abs(curVy) / 40) * 1.6);
+    }
+
+    // --- MODULE 4: HYDRAULICS & PIPE FLOW ---
+    const hydroObjs = { particles: [] };
+    function buildHydraulics() {
+      const pipeMat = new THREE.MeshStandardMaterial({
+        color: 0x38bdf8, transparent: true, opacity: 0.26, roughness: 0.15, metalness: 0.2
+      });
+      // Left wide inlet pipe (-9 to -2.5)
+      const leftPipe = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 6.5, 28, 1, true), pipeMat);
+      leftPipe.rotation.z = Math.PI / 2;
+      leftPipe.position.set(-5.75, 2.0, 0);
+
+      // Converging cone (-2.5 to -0.5)
+      const convCone = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.5, 2.0, 28, 1, true), pipeMat);
+      convCone.rotation.z = Math.PI / 2;
+      convCone.position.set(-1.5, 2.0, 0);
+
+      // Narrow throat (-0.5 to 2.5)
+      const throatPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 3.0, 28, 1, true), pipeMat);
+      throatPipe.rotation.z = Math.PI / 2;
+      throatPipe.position.set(1.0, 2.0, 0);
+
+      // Diverging cone (2.5 to 4.5)
+      const divCone = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 0.9, 2.0, 28, 1, true), pipeMat);
+      divCone.rotation.z = Math.PI / 2;
+      divCone.position.set(3.5, 2.0, 0);
+
+      // Right outlet pipe (4.5 to 9.5)
+      const rightPipe = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 5.0, 28, 1, true), pipeMat);
+      rightPipe.rotation.z = Math.PI / 2;
+      rightPipe.position.set(7.0, 2.0, 0);
+
+      groups.hydraulics.add(leftPipe, convCone, throatPipe, divCone, rightPipe);
+      hydroObjs.leftPipe = leftPipe;
+      hydroObjs.convCone = convCone;
+      hydroObjs.throatPipe = throatPipe;
+      hydroObjs.divCone = divCone;
+      hydroObjs.rightPipe = rightPipe;
+
+      const pGeo = new THREE.SphereGeometry(0.14, 12, 12);
+      const pMat = new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x06b6d4, emissiveIntensity: 0.45 });
+      for (let i = 0; i < 36; i++) {
+        const dot = new THREE.Mesh(pGeo, pMat);
+        dot.userData.u = i / 36;
+        dot.userData.rFrac = ((i * 7) % 11) / 12;
+        dot.userData.ang = i * 1.1;
+        groups.hydraulics.add(dot);
+        hydroObjs.particles.push(dot);
+      }
+    }
+
+    function updateHydraulics(dt) {
+      const { Q, D1, D2 } = state.hydraulics;
+      const r1 = 0.7 + (D1 / 2.0) * 1.1;
+      const r2 = Math.min(r1 * 0.92, 0.35 + (D2 / 2.0) * 1.1);
+
+      hydroObjs.leftPipe.scale.set(r1 / 1.5, 1, r1 / 1.5);
+      hydroObjs.rightPipe.scale.set(r1 / 1.5, 1, r1 / 1.5);
+      hydroObjs.throatPipe.scale.set(r2 / 0.9, 1, r2 / 0.9);
+
+      const speedBoost = Math.pow(D1 / Math.max(0.2, D2), 2);
+      hydroObjs.particles.forEach(dot => {
+        if (state.isPlaying && state.activeStep >= 2) {
+          const inThroat = dot.userData.u > 0.32 && dot.userData.u < 0.68;
+          const mult = inThroat ? speedBoost : 1.0;
+          dot.userData.u = (dot.userData.u + dt * (0.14 + Q * 0.25) * mult) % 1.0;
+        }
+        const u = dot.userData.u;
+        const x = -9 + u * 18;
+        let rad = r1;
+        if (u > 0.32 && u < 0.44) {
+          const t = (u - 0.32) / 0.12;
+          rad = r1 * (1 - t) + r2 * t;
+        } else if (u >= 0.44 && u <= 0.68) {
+          rad = r2;
+        } else if (u > 0.68 && u < 0.8) {
+          const t = (u - 0.68) / 0.12;
+          rad = r2 * (1 - t) + r1 * t;
+        }
+        const rr = dot.userData.rFrac * (rad - 0.15);
+        dot.position.set(x, 2.0 + Math.sin(dot.userData.ang) * rr, Math.cos(dot.userData.ang) * rr);
+      });
+    }
+
+    // --- MODULE 5: FOUNDATIONS (SHALLOW & DEEP) ---
+    const foundObjs = { piles: [] };
+    function buildFoundations() {
+      // Upper soil & lower competent stratum block
+      const upperSoil = new THREE.Mesh(
+        new THREE.BoxGeometry(14, 2.2, 10),
+        new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 })
+      );
+      upperSoil.position.set(0, -1.1, 0);
+
+      const deepStratum = new THREE.Mesh(
+        new THREE.BoxGeometry(14, 2.6, 10),
+        new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.75 })
+      );
+      deepStratum.position.set(0, -3.5, 0);
+      groups.foundations.add(upperSoil, deepStratum);
+
+      const concMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.55, metalness: 0.15 });
+      const col = new THREE.Mesh(new THREE.BoxGeometry(1.1, 3.2, 1.1), concMat);
+      col.position.set(0, 1.6, 0);
+      col.castShadow = true;
+      groups.foundations.add(col);
+      foundObjs.col = col;
+
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.65, 4.5), concMat);
+      cap.position.set(0, 0.2, 0);
+      cap.castShadow = true;
+      groups.foundations.add(cap);
+      foundObjs.cap = cap;
+
+      const pileMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.35, metalness: 0.4 });
+      const pileGeo = new THREE.CylinderGeometry(0.32, 0.28, 3.6, 16);
+      const offsets = [[-1.3, -1.3], [1.3, -1.3], [-1.3, 1.3], [1.3, 1.3], [0, 0]];
+      offsets.forEach(([px, pz]) => {
+        const p = new THREE.Mesh(pileGeo, pileMat);
+        p.position.set(px, -1.8, pz);
+        groups.foundations.add(p);
+        foundObjs.piles.push(p);
+      });
+
+      foundObjs.loadArrow = create3DArrow(0xf59e0b);
+      foundObjs.loadArrow.rotation.z = Math.PI;
+      foundObjs.loadArrow.position.set(0, 5.2, 0);
+      setArrowLength(foundObjs.loadArrow, 1.8);
+      groups.foundations.add(foundObjs.loadArrow);
+    }
+
+    function updateFoundations() {
+      const { type, Qc, areaOrPiles } = state.foundations;
+      const isDeep = type === 'pile';
+      const isRaft = type === 'raft';
+
+      const w = isRaft ? 9.5 : Math.min(6.5, 2.2 + areaOrPiles * 0.45);
+      const d = isRaft ? 7.5 : Math.min(6.5, 2.2 + areaOrPiles * 0.45);
+      foundObjs.cap.scale.set(w / 4.5, isRaft ? 1.25 : 1.0, d / 4.5);
+
+      foundObjs.piles.forEach((p, idx) => {
+        const activeCount = Math.max(1, Math.min(5, Math.round(areaOrPiles)));
+        p.visible = isDeep && idx < activeCount;
+      });
+
+      const loadLen = 0.8 + (Qc / 1500) * 1.8;
+      setArrowLength(foundObjs.loadArrow, loadLen);
+      foundObjs.loadArrow.position.y = 3.2 + loadLen;
+    }
+
+    // --- MODULE 6: BASIC GEOLOGY ---
+    const geoObjs = {};
+    function buildGeology() {
+      const strataGroup = new THREE.Group();
+      strataGroup.position.set(0, -1.2, 0);
+
+      const m1 = new THREE.Mesh(new THREE.BoxGeometry(13, 1.1, 8), new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.9 }));
+      m1.position.y = 1.6;
+      const m2 = new THREE.Mesh(new THREE.BoxGeometry(13, 1.3, 8), new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.75 }));
+      m2.position.y = 0.35;
+      const m3 = new THREE.Mesh(new THREE.BoxGeometry(13, 1.8, 8), new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.55, metalness: 0.15 }));
+      m3.position.y = -1.2;
+
+      strataGroup.add(m1, m2, m3);
+      groups.geology.add(strataGroup);
+      geoObjs.strataGroup = strataGroup;
+    }
+
+    function updateGeology() {
+      const { dipDeg, depthZ } = state.geology;
+      geoObjs.strataGroup.rotation.z = -(dipDeg * Math.PI) / 180;
+      const scaleY = 0.75 + (depthZ / 30) * 0.65;
+      geoObjs.strataGroup.scale.set(1, scaleY, 1);
+    }
+
+    // --- MODULE 7: HIGHWAY & PAVEMENT ---
+    const roadObjs = {};
+    function buildHighway() {
+      // Subgrade, Sub-base, Base, Wearing Course
+      const subgrade = new THREE.Mesh(new THREE.BoxGeometry(16, 1.2, 8), new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 }));
+      subgrade.position.y = -0.6;
+      const subbase = new THREE.Mesh(new THREE.BoxGeometry(16, 0.55, 8), new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.75 }));
+      subbase.position.y = 0.275;
+      const baseCourse = new THREE.Mesh(new THREE.BoxGeometry(16, 0.55, 8), new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.65 }));
+      baseCourse.position.y = 0.825;
+      const wearing = new THREE.Mesh(new THREE.BoxGeometry(16, 0.35, 8), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 }));
+      wearing.position.y = 1.275;
+
+      groups.highway.add(subgrade, subbase, baseCourse, wearing);
+      roadObjs.wearing = wearing;
+      roadObjs.baseCourse = baseCourse;
+      roadObjs.subbase = subbase;
+
+      // Axle load arrow
+      roadObjs.axleArrow = create3DArrow(0xf59e0b);
+      roadObjs.axleArrow.rotation.z = Math.PI;
+      groups.highway.add(roadObjs.axleArrow);
+    }
+
+    function updateHighway() {
+      const { Waxle, thickness } = state.highway;
+      const tScale = 0.7 + (thickness / 70) * 0.9;
+      roadObjs.wearing.scale.set(1, tScale, 1);
+      roadObjs.baseCourse.scale.set(1, tScale, 1);
+      roadObjs.subbase.scale.set(1, tScale, 1);
+
+      const len = 0.7 + (Waxle / 180) * 1.6;
+      setArrowLength(roadObjs.axleArrow, len);
+      roadObjs.axleArrow.position.set(0, 1.5 + len, 0);
+    }
+
+    // --- MODULE 8: TRUSSES ---
+    const trussObjs = { members: [] };
+    function buildTruss() {
+      const mat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.35, metalness: 0.4 });
+      const cylGeo = new THREE.CylinderGeometry(0.11, 0.11, 1, 12);
+      for (let i = 0; i < 26; i++) {
+        const m = new THREE.Mesh(cylGeo, mat.clone());
+        m.castShadow = true;
+        groups.truss.add(m);
+        trussObjs.members.push(m);
+      }
+      trussObjs.loadArrow = create3DArrow(0xf59e0b);
+      trussObjs.loadArrow.rotation.z = Math.PI;
+      groups.truss.add(trussObjs.loadArrow);
+    }
+
+    function placeMember(mesh, p1, p2, colorHex) {
+      mesh.visible = true;
+      const dir = new THREE.Vector3().subVectors(p2, p1);
+      const len = dir.length();
+      mesh.position.copy(p1).addScaledVector(dir, 0.5);
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+      mesh.scale.set(1, len, 1);
+      mesh.material.color.setHex(colorHex);
+    }
+
+    function updateTruss() {
+      const { P, span, bays } = state.truss;
+      const nBays = Math.max(3, Math.min(8, Math.round(bays)));
+      const visW = Math.min(13, span * 1.15);
+      const dx = visW / nBays;
+      const h = 2.2;
+      const sag = state.isPlaying ? Math.min(0.45, (P / 150) * 0.35) * (0.9 + 0.1 * Math.sin(state.time * 3)) : Math.min(0.45, (P / 150) * 0.35);
+
+      trussObjs.members.forEach(m => (m.visible = false));
+      let idx = 0;
+
+      for (let i = 0; i < nBays; i++) {
+        const x0 = -visW / 2 + i * dx;
+        const x1 = x0 + dx;
+        const midFactor0 = 1 - Math.abs((i / nBays) - 0.5) * 2;
+        const midFactor1 = 1 - Math.abs(((i + 1) / nBays) - 0.5) * 2;
+
+        const b0 = new THREE.Vector3(x0, 0.5 - sag * midFactor0, 0);
+        const b1 = new THREE.Vector3(x1, 0.5 - sag * midFactor1, 0);
+        const t0 = new THREE.Vector3(x0, 0.5 + h - sag * midFactor0, 0);
+        const t1 = new THREE.Vector3(x1, 0.5 + h - sag * midFactor1, 0);
+
+        // Bottom chord (tension = blue), Top chord (compression = red), Diagonal (amber/green)
+        if (idx < trussObjs.members.length) placeMember(trussObjs.members[idx++], b0, b1, 0x38bdf8);
+        if (idx < trussObjs.members.length) placeMember(trussObjs.members[idx++], t0, t1, 0xf43f5e);
+        if (idx < trussObjs.members.length) placeMember(trussObjs.members[idx++], b0, t1, i < nBays / 2 ? 0xf59e0b : 0x10b981);
+        if (idx < trussObjs.members.length) placeMember(trussObjs.members[idx++], b1, t1, 0x94a3b8);
+      }
+
+      const len = 0.75 + (P / 150) * 1.5;
+      setArrowLength(trussObjs.loadArrow, len);
+      trussObjs.loadArrow.position.set(0, 0.5 + h + len, 0);
     }
 
     // =========================================================================
-    // 7. UI BUILDER: CONTROLS, METRICS, STEPS & SEARCH
+    // 4. UI RENDERING, METRICS, SEARCH, LOGIN & CUSTOM EXAMPLES
     // =========================================================================
     function renderModuleUI() {
       const mod = MODULES[state.activeModule];
+      document.getElementById('viewport-category').innerHTML = mod.category;
+      document.getElementById('viewport-title').innerHTML = mod.title;
 
-      // 1. Update Viewport Header & Legend
-      document.getElementById('viewport-category').textContent = mod.category;
-      document.getElementById('viewport-title').textContent = mod.title;
+      const customTag = document.getElementById('active-custom-tag');
+      if (state.activeCustomTitle) {
+        customTag.textContent = `Custom Scenario: ${state.activeCustomTitle}`;
+        customTag.classList.remove('hidden');
+      } else {
+        customTag.classList.add('hidden');
+      }
+
       document.getElementById('viewport-legend').innerHTML = mod.legend
-        .map(item => `<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${item.color} inline-block"></span>${item.label}</span>`)
+        .map(l => `<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${l.color} inline-block"></span><span>${l.label}</span></span>`)
         .join('');
 
-      // 2. Toggle Three.js Groups
-      beamGroup.visible = state.activeModule === 'beam';
-      newtonGroup.visible = state.activeModule === 'newton';
-      projectileGroup.visible = state.activeModule === 'projectile';
-
-      // Show/Hide SFD & BMD card
+      Object.keys(groups).forEach(k => (groups[k].visible = k === state.activeModule));
       document.getElementById('diagrams-card').style.display = state.activeModule === 'beam' ? 'block' : 'none';
 
-      // 3. Render Sliders
-      const controlsEl = document.getElementById('controls-container');
-      if (state.activeModule === 'beam') {
-        const xMeters = (state.beam.xRatio * state.beam.L).toFixed(2);
-        controlsEl.innerHTML = `
-          <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <span class="text-gray-300 font-medium">Point Load (<span class="font-mono text-amber-400">P</span>)</span>
-              <span id="val-beam-p" class="font-mono font-bold text-white">${state.beam.P} kN</span>
-            </div>
-            <input id="slider-beam-p" type="range" min="5" max="100" step="1" value="${state.beam.P}" />
-          </div>
-          <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <span class="text-gray-300 font-medium">Load Position (<span class="font-mono text-sky-400">x</span> from left)</span>
-              <span id="val-beam-x" class="font-mono font-bold text-white">${xMeters} m (${Math.round(state.beam.xRatio * 100)}%)</span>
-            </div>
-            <input id="slider-beam-x" type="range" min="0.1" max="0.9" step="0.02" value="${state.beam.xRatio}" />
-          </div>
-          <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <span class="text-gray-300 font-medium">Beam Span (<span class="font-mono text-emerald-400">L</span>)</span>
-              <span id="val-beam-l" class="font-mono font-bold text-white">${state.beam.L.toFixed(1)} m</span>
-            </div>
-            <input id="slider-beam-l" type="range" min="4" max="12" step="0.5" value="${state.beam.L}" />
-          </div>
-        `;
+      renderControls();
+      updateStepUI();
+      updateMetrics();
+      document.getElementById('formula-box').innerHTML = mod.formulas.map(f => `<div>• ${f}</div>`).join('');
+    }
 
-        document.getElementById('slider-beam-p').addEventListener('input', (e) => {
-          state.beam.P = parseFloat(e.target.value);
-          document.getElementById('val-beam-p').textContent = `${state.beam.P} kN`;
-          updateMetrics();
+    function addSlider(containerEl, labelHtml, valText, min, max, step, value, onChange) {
+      const wrap = document.createElement('div');
+      wrap.innerHTML = `
+        <div class="flex justify-between text-xs mb-1.5">
+          <span class="text-slate-300 font-medium">${labelHtml}</span>
+          <span class="val-readout font-mono font-bold text-white">${valText}</span>
+        </div>
+        <input type="range" min="${min}" max="${max}" step="${step}" value="${value}" />
+      `;
+      const input = wrap.querySelector('input');
+      const readout = wrap.querySelector('.val-readout');
+      input.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        const txt = onChange(v);
+        if (txt) readout.innerHTML = txt;
+        updateMetrics();
+      });
+      containerEl.appendChild(wrap);
+    }
+
+    function renderControls() {
+      const box = document.getElementById('controls-container');
+      box.innerHTML = '';
+
+      if (state.activeModule === 'beam') {
+        addSlider(box, 'Point Load (<strong>P</strong>)', `${state.beam.P} kN`, 5, 100, 1, state.beam.P, v => {
+          state.beam.P = v; return `${v} kN`;
         });
-        document.getElementById('slider-beam-x').addEventListener('input', (e) => {
-          state.beam.xRatio = parseFloat(e.target.value);
-          const xm = (state.beam.xRatio * state.beam.L).toFixed(2);
-          document.getElementById('val-beam-x').textContent = `${xm} m (${Math.round(state.beam.xRatio * 100)}%)`;
-          updateMetrics();
+        addSlider(box, 'Load Position (<strong>x</strong>)', `${(state.beam.xRatio * state.beam.L).toFixed(2)} m`, 0.1, 0.9, 0.02, state.beam.xRatio, v => {
+          state.beam.xRatio = v; return `${(v * state.beam.L).toFixed(2)} m`;
         });
-        document.getElementById('slider-beam-l').addEventListener('input', (e) => {
-          state.beam.L = parseFloat(e.target.value);
-          const xm = (state.beam.xRatio * state.beam.L).toFixed(2);
-          document.getElementById('val-beam-l').textContent = `${state.beam.L.toFixed(1)} m`;
-          document.getElementById('val-beam-x').textContent = `${xm} m (${Math.round(state.beam.xRatio * 100)}%)`;
-          updateMetrics();
+        addSlider(box, 'Beam Span (<strong>L</strong>)', `${state.beam.L.toFixed(1)} m`, 4, 12, 0.5, state.beam.L, v => {
+          state.beam.L = v; return `${v.toFixed(1)} m`;
         });
       } else if (state.activeModule === 'newton') {
-        controlsEl.innerHTML = `
-          <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <span class="text-gray-300 font-medium">Applied Force (<span class="font-mono text-emerald-400">F</span>)</span>
-              <span id="val-newton-f" class="font-mono font-bold text-white">${state.newton.F} N</span>
-            </div>
-            <input id="slider-newton-f" type="range" min="0" max="150" step="1" value="${state.newton.F}" />
-          </div>
-          <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <span class="text-gray-300 font-medium">Block Mass (<span class="font-mono text-sky-400">m</span>)</span>
-              <span id="val-newton-m" class="font-mono font-bold text-white">${state.newton.m} kg</span>
-            </div>
-            <input id="slider-newton-m" type="range" min="2" max="30" step="1" value="${state.newton.m}" />
-          </div>
-          <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <span class="text-gray-300 font-medium">Friction Coefficient (<span class="font-mono text-rose-400">μ</span>)</span>
-              <span id="val-newton-mu" class="font-mono font-bold text-white">${state.newton.mu.toFixed(2)}</span>
-            </div>
-            <input id="slider-newton-mu" type="range" min="0" max="0.8" step="0.02" value="${state.newton.mu}" />
-          </div>
-        `;
-
-        document.getElementById('slider-newton-f').addEventListener('input', (e) => {
-          state.newton.F = parseFloat(e.target.value);
-          document.getElementById('val-newton-f').textContent = `${state.newton.F} N`;
-          updateMetrics();
+        addSlider(box, 'Applied Force (<strong>F</strong>)', `${state.newton.F} N`, 0, 150, 1, state.newton.F, v => {
+          state.newton.F = v; return `${v} N`;
         });
-        document.getElementById('slider-newton-m').addEventListener('input', (e) => {
-          state.newton.m = parseFloat(e.target.value);
-          document.getElementById('val-newton-m').textContent = `${state.newton.m} kg`;
-          updateMetrics();
+        addSlider(box, 'Mass (<strong>m</strong>)', `${state.newton.m} kg`, 2, 30, 1, state.newton.m, v => {
+          state.newton.m = v; return `${v} kg`;
         });
-        document.getElementById('slider-newton-mu').addEventListener('input', (e) => {
-          state.newton.mu = parseFloat(e.target.value);
-          document.getElementById('val-newton-mu').textContent = state.newton.mu.toFixed(2);
-          updateMetrics();
+        addSlider(box, 'Friction (<strong>&mu;</strong>)', state.newton.mu.toFixed(2), 0, 0.8, 0.02, state.newton.mu, v => {
+          state.newton.mu = v; return v.toFixed(2);
         });
       } else if (state.activeModule === 'projectile') {
-        controlsEl.innerHTML = `
-          <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <span class="text-gray-300 font-medium">Launch Velocity (<span class="font-mono text-amber-400">v₀</span>)</span>
-              <span id="val-proj-v0" class="font-mono font-bold text-white">${state.projectile.v0} m/s</span>
-            </div>
-            <input id="slider-proj-v0" type="range" min="10" max="40" step="1" value="${state.projectile.v0}" />
-          </div>
-          <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <span class="text-gray-300 font-medium">Launch Angle (<span class="font-mono text-sky-400">θ</span>)</span>
-              <span id="val-proj-angle" class="font-mono font-bold text-white">${state.projectile.angle}°</span>
-            </div>
-            <input id="slider-proj-angle" type="range" min="15" max="80" step="1" value="${state.projectile.angle}" />
-          </div>
-          <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <span class="text-gray-300 font-medium">Gravity Environment (<span class="font-mono text-emerald-400">g</span>)</span>
-              <span id="val-proj-g" class="font-mono font-bold text-white">${state.projectile.planet} (${state.projectile.gravity} m/s²)</span>
-            </div>
-            <div class="grid grid-cols-3 gap-1.5 mt-1">
-              <button data-g="9.81" data-planet="Earth" class="planet-btn py-1.5 rounded-lg text-xs font-semibold border ${state.projectile.planet === 'Earth' ? 'bg-sky-500/20 text-sky-300 border-sky-400' : 'bg-slatebg text-gray-300 border-gray-700'}">Earth (9.81)</button>
-              <button data-g="3.72" data-planet="Mars" class="planet-btn py-1.5 rounded-lg text-xs font-semibold border ${state.projectile.planet === 'Mars' ? 'bg-sky-500/20 text-sky-300 border-sky-400' : 'bg-slatebg text-gray-300 border-gray-700'}">Mars (3.72)</button>
-              <button data-g="1.62" data-planet="Moon" class="planet-btn py-1.5 rounded-lg text-xs font-semibold border ${state.projectile.planet === 'Moon' ? 'bg-sky-500/20 text-sky-300 border-sky-400' : 'bg-slatebg text-gray-300 border-gray-700'}">Moon (1.62)</button>
-            </div>
+        addSlider(box, 'Launch Speed (<strong>v<sub>0</sub></strong>)', `${state.projectile.v0} m/s`, 10, 40, 1, state.projectile.v0, v => {
+          state.projectile.v0 = v; return `${v} m/s`;
+        });
+        addSlider(box, 'Launch Angle (<strong>&theta;</strong>)', `${state.projectile.angle}&deg;`, 15, 80, 1, state.projectile.angle, v => {
+          state.projectile.angle = v; return `${v}&deg;`;
+        });
+        const pRow = document.createElement('div');
+        pRow.innerHTML = `
+          <div class="text-xs text-slate-300 font-medium mb-1.5">Gravity Body (<strong>g<sub>0</sub></strong>)</div>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button data-g="9.81" data-p="Earth" class="g-btn py-1.5 rounded-lg text-xs font-semibold border ${state.projectile.planet === 'Earth' ? 'bg-sky-500/20 text-sky-300 border-sky-400' : 'bg-labBg text-slate-300 border-slate-700'}">Earth (9.81)</button>
+            <button data-g="3.72" data-p="Mars" class="g-btn py-1.5 rounded-lg text-xs font-semibold border ${state.projectile.planet === 'Mars' ? 'bg-sky-500/20 text-sky-300 border-sky-400' : 'bg-labBg text-slate-300 border-slate-700'}">Mars (3.72)</button>
+            <button data-g="1.62" data-p="Moon" class="g-btn py-1.5 rounded-lg text-xs font-semibold border ${state.projectile.planet === 'Moon' ? 'bg-sky-500/20 text-sky-300 border-sky-400' : 'bg-labBg text-slate-300 border-slate-700'}">Moon (1.62)</button>
           </div>
         `;
-
-        document.getElementById('slider-proj-v0').addEventListener('input', (e) => {
-          state.projectile.v0 = parseFloat(e.target.value);
-          document.getElementById('val-proj-v0').textContent = `${state.projectile.v0} m/s`;
-          updateMetrics();
-        });
-        document.getElementById('slider-proj-angle').addEventListener('input', (e) => {
-          state.projectile.angle = parseFloat(e.target.value);
-          document.getElementById('val-proj-angle').textContent = `${state.projectile.angle}°`;
-          updateMetrics();
-        });
-        document.querySelectorAll('.planet-btn').forEach((btn) => {
+        pRow.querySelectorAll('.g-btn').forEach(btn => {
           btn.addEventListener('click', () => {
-            state.projectile.gravity = parseFloat(btn.dataset.g);
-            state.projectile.planet = btn.dataset.planet;
+            state.projectile.g0 = parseFloat(btn.dataset.g);
+            state.projectile.planet = btn.dataset.p;
             state.projectile.flightTime = 0;
             renderModuleUI();
           });
         });
+        box.appendChild(pRow);
+      } else if (state.activeModule === 'hydraulics') {
+        addSlider(box, 'Flow Rate (<strong>Q</strong>)', `${state.hydraulics.Q.toFixed(2)} m<sup>3</sup>/s`, 0.05, 1.5, 0.05, state.hydraulics.Q, v => {
+          state.hydraulics.Q = v; return `${v.toFixed(2)} m<sup>3</sup>/s`;
+        });
+        addSlider(box, 'Inlet Diameter (<strong>D<sub>1</sub></strong>)', `${state.hydraulics.D1.toFixed(2)} m`, 0.6, 2.0, 0.05, state.hydraulics.D1, v => {
+          state.hydraulics.D1 = v; return `${v.toFixed(2)} m`;
+        });
+        addSlider(box, 'Throat Diameter (<strong>D<sub>2</sub></strong>)', `${state.hydraulics.D2.toFixed(2)} m`, 0.25, 1.5, 0.05, state.hydraulics.D2, v => {
+          state.hydraulics.D2 = v; return `${v.toFixed(2)} m`;
+        });
+      } else if (state.activeModule === 'foundations') {
+        const tRow = document.createElement('div');
+        tRow.innerHTML = `
+          <div class="text-xs text-slate-300 font-medium mb-1.5">Foundation Type</div>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button data-ft="pad" class="ft-btn py-1.5 rounded-lg text-xs font-semibold border ${state.foundations.type === 'pad' ? 'bg-sky-500/20 text-sky-300 border-sky-400' : 'bg-labBg text-slate-300 border-slate-700'}">Pad Footing</button>
+            <button data-ft="raft" class="ft-btn py-1.5 rounded-lg text-xs font-semibold border ${state.foundations.type === 'raft' ? 'bg-sky-500/20 text-sky-300 border-sky-400' : 'bg-labBg text-slate-300 border-slate-700'}">Raft / Mat</button>
+            <button data-ft="pile" class="ft-btn py-1.5 rounded-lg text-xs font-semibold border ${state.foundations.type === 'pile' ? 'bg-sky-500/20 text-sky-300 border-sky-400' : 'bg-labBg text-slate-300 border-slate-700'}">Deep Piles</button>
+          </div>
+        `;
+        tRow.querySelectorAll('.ft-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            state.foundations.type = btn.dataset.ft;
+            renderModuleUI();
+          });
+        });
+        box.appendChild(tRow);
+
+        addSlider(box, 'Column Load (<strong>Q<sub>c</sub></strong>)', `${state.foundations.Qc} kN`, 100, 1500, 25, state.foundations.Qc, v => {
+          state.foundations.Qc = v; return `${v} kN`;
+        });
+        addSlider(box, 'Size / Pile Count', `${state.foundations.areaOrPiles}`, 1, 10, 1, state.foundations.areaOrPiles, v => {
+          state.foundations.areaOrPiles = v; return `${v}`;
+        });
+      } else if (state.activeModule === 'geology') {
+        addSlider(box, 'Strata Dip Angle (<strong>&alpha;</strong>)', `${state.geology.dipDeg}&deg;`, 0, 45, 1, state.geology.dipDeg, v => {
+          state.geology.dipDeg = v; return `${v}&deg;`;
+        });
+        addSlider(box, 'Depth (<strong>z</strong>)', `${state.geology.depthZ} m`, 2, 30, 1, state.geology.depthZ, v => {
+          state.geology.depthZ = v; return `${v} m`;
+        });
+        addSlider(box, 'Rock/Soil Density (<strong>&rho;</strong>)', `${state.geology.rho} kg/m<sup>3</sup>`, 1700, 2800, 50, state.geology.rho, v => {
+          state.geology.rho = v; return `${v} kg/m<sup>3</sup>`;
+        });
+      } else if (state.activeModule === 'highway') {
+        addSlider(box, 'Axle Load (<strong>W<sub>axle</sub></strong>)', `${state.highway.Waxle} kN`, 40, 180, 5, state.highway.Waxle, v => {
+          state.highway.Waxle = v; return `${v} kN`;
+        });
+        addSlider(box, 'Subgrade <strong>CBR</strong>', `${state.highway.cbr}%`, 2, 35, 1, state.highway.cbr, v => {
+          state.highway.cbr = v; return `${v}%`;
+        });
+        addSlider(box, 'Pavement Thickness', `${state.highway.thickness} cm`, 15, 70, 1, state.highway.thickness, v => {
+          state.highway.thickness = v; return `${v} cm`;
+        });
+      } else if (state.activeModule === 'truss') {
+        addSlider(box, 'Deck Load (<strong>P</strong>)', `${state.truss.P} kN`, 10, 150, 5, state.truss.P, v => {
+          state.truss.P = v; return `${v} kN`;
+        });
+        addSlider(box, 'Bridge Span (<strong>L</strong>)', `${state.truss.span} m`, 6, 18, 1, state.truss.span, v => {
+          state.truss.span = v; return `${v} m`;
+        });
+        addSlider(box, 'Truss Bays', `${state.truss.bays}`, 3, 8, 1, state.truss.bays, v => {
+          state.truss.bays = v; return `${v}`;
+        });
       }
+    }
 
-      // 4. Render Governing Formulas
-      document.getElementById('formula-box').innerHTML = mod.formulas
-        .map(f => `<div>• ${f}</div>`)
-        .join('');
-
-      updateStepUI();
-      updateMetrics();
+    function metricCard(labelHtml, valHtml, colorClass = 'text-sky-400') {
+      return `
+        <div class="bg-labBg p-3 rounded-xl border border-slate-800">
+          <span class="text-[11px] text-slate-400 block mb-0.5">${labelHtml}</span>
+          <span class="text-sm sm:text-base font-mono font-bold ${colorClass}">${valHtml}</span>
+        </div>
+      `;
     }
 
     function updateMetrics() {
@@ -1282,174 +1687,166 @@
       if (state.activeModule === 'beam') {
         const { P, xRatio, L } = state.beam;
         const x = xRatio * L;
-        const R1 = (P * (L - x)) / L;
-        const R2 = (P * x) / L;
-        const Vmax = Math.max(R1, R2);
+        const RA = (P * (L - x)) / L;
+        const RB = (P * x) / L;
         const Mmax = (P * x * (L - x)) / L;
-
-        grid.innerHTML = `
-          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
-            <span class="text-[11px] text-gray-400 block">Max Bending Moment</span>
-            <span class="text-sm sm:text-base font-mono font-bold text-amber-400">${Mmax.toFixed(2)} kN·m</span>
-          </div>
-          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
-            <span class="text-[11px] text-gray-400 block">Max Shear Force (V_max)</span>
-            <span class="text-sm sm:text-base font-mono font-bold text-emerald-400">${Vmax.toFixed(2)} kN</span>
-          </div>
-          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
-            <span class="text-[11px] text-gray-400 block">Left Reaction (R₁)</span>
-            <span class="text-sm font-mono font-semibold text-sky-300">${R1.toFixed(2)} kN</span>
-          </div>
-          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
-            <span class="text-[11px] text-gray-400 block">Right Reaction (R₂)</span>
-            <span class="text-sm font-mono font-semibold text-sky-300">${R2.toFixed(2)} kN</span>
-          </div>
-        `;
+        grid.innerHTML =
+          metricCard('Max Moment (<strong>M<sub>max</sub></strong>)', `${Mmax.toFixed(2)} kN·m`, 'text-amber-400') +
+          metricCard('Max Shear (<strong>V<sub>max</sub></strong>)', `${Math.max(RA, RB).toFixed(2)} kN`, 'text-emerald-400') +
+          metricCard('Left Reaction (<strong>R<sub>A</sub></strong>)', `${RA.toFixed(2)} kN`, 'text-sky-300') +
+          metricCard('Right Reaction (<strong>R<sub>B</sub></strong>)', `${RB.toFixed(2)} kN`, 'text-sky-300');
       } else if (state.activeModule === 'newton') {
         const { F, m, mu } = state.newton;
-        const N = m * 9.81;
-        const fMax = mu * N;
+        const fMax = mu * m * 9.81;
         const fNet = Math.max(0, F - fMax);
         const a = fNet / m;
-        const status = fNet > 0 ? 'Accelerating' : 'Static Equilibrium';
-
-        grid.innerHTML = `
-          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
-            <span class="text-[11px] text-gray-400 block">Acceleration (a = F_net/m)</span>
-            <span class="text-sm sm:text-base font-mono font-bold text-emerald-400">${a.toFixed(2)} m/s²</span>
-          </div>
-          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
-            <span class="text-[11px] text-gray-400 block">Net Horizontal Force</span>
-            <span class="text-sm sm:text-base font-mono font-bold text-sky-400">${fNet.toFixed(1)} N</span>
-          </div>
-          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
-            <span class="text-[11px] text-gray-400 block">Max Friction (μ·N)</span>
-            <span class="text-sm font-mono font-semibold text-rose-400">${fMax.toFixed(1)} N</span>
-          </div>
-          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
-            <span class="text-[11px] text-gray-400 block">Dynamic State</span>
-            <span class="text-xs font-mono font-semibold text-amber-300">${status}</span>
-          </div>
-        `;
+        grid.innerHTML =
+          metricCard('Acceleration (<strong>a</strong>)', `${a.toFixed(2)} m/s<sup>2</sup>`, 'text-emerald-400') +
+          metricCard('Net Force (<strong>F<sub>net</sub></strong>)', `${fNet.toFixed(1)} N`, 'text-sky-400') +
+          metricCard('Max Friction (<strong>f<sub>max</sub></strong>)', `${fMax.toFixed(1)} N`, 'text-rose-400') +
+          metricCard('Normal Force (<strong>N</strong>)', `${(m * 9.81).toFixed(1)} N`, 'text-amber-300');
       } else if (state.activeModule === 'projectile') {
-        const { v0, angle, gravity } = state.projectile;
+        const { v0, angle, g0 } = state.projectile;
         const rad = (angle * Math.PI) / 180;
         const vx = v0 * Math.cos(rad);
         const vy = v0 * Math.sin(rad);
-        const tFlight = (2 * vy) / gravity;
-        const hMax = (vy * vy) / (2 * gravity);
-        const range = vx * tFlight;
-
-        grid.innerHTML = `
-          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
-            <span class="text-[11px] text-gray-400 block">Horizontal Range (R)</span>
-            <span class="text-sm sm:text-base font-mono font-bold text-amber-400">${range.toFixed(1)} m</span>
-          </div>
-          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
-            <span class="text-[11px] text-gray-400 block">Max Height (H_max)</span>
-            <span class="text-sm sm:text-base font-mono font-bold text-sky-400">${hMax.toFixed(1)} m</span>
-          </div>
-          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
-            <span class="text-[11px] text-gray-400 block">Velocity (vₓ / vᵧ₀)</span>
-            <span class="text-xs font-mono font-semibold text-emerald-300">${vx.toFixed(1)} / ${vy.toFixed(1)} m/s</span>
-          </div>
-          <div class="bg-slatebg p-3 rounded-xl border border-gray-800">
-            <span class="text-[11px] text-gray-400 block">Total Flight Time</span>
-            <span class="text-sm font-mono font-semibold text-gray-200">${tFlight.toFixed(2)} s</span>
-          </div>
-        `;
+        const hMax = (vy * vy) / (2 * g0);
+        const range = (v0 * v0 * Math.sin(2 * rad)) / g0;
+        grid.innerHTML =
+          metricCard('Range (<strong>R</strong>)', `${range.toFixed(1)} m`, 'text-amber-400') +
+          metricCard('Max Height (<strong>H<sub>max</sub></strong>)', `${hMax.toFixed(1)} m`, 'text-sky-400') +
+          metricCard('<strong>v<sub>x</sub></strong> / <strong>v<sub>y0</sub></strong>', `${vx.toFixed(1)} / ${vy.toFixed(1)} m/s`, 'text-emerald-300') +
+          metricCard('Gravity (<strong>g<sub>0</sub></strong>)', `${g0} m/s<sup>2</sup>`, 'text-slate-200');
+      } else if (state.activeModule === 'hydraulics') {
+        const { Q, D1, D2, rho } = state.hydraulics;
+        const A1 = Math.PI * D1 * D1 / 4;
+        const A2 = Math.PI * D2 * D2 / 4;
+        const v1 = Q / A1;
+        const v2 = Q / A2;
+        const dpKpa = (0.5 * rho * (v2 * v2 - v1 * v1)) / 1000;
+        grid.innerHTML =
+          metricCard('Inlet Speed (<strong>v<sub>1</sub></strong>)', `${v1.toFixed(2)} m/s`, 'text-sky-400') +
+          metricCard('Throat Speed (<strong>v<sub>2</sub></strong>)', `${v2.toFixed(2)} m/s`, 'text-emerald-400') +
+          metricCard('Pressure Drop (&Delta;<strong>p</strong>)', `${dpKpa.toFixed(2)} kPa`, 'text-amber-400') +
+          metricCard('Discharge (<strong>Q</strong>)', `${Q.toFixed(2)} m<sup>3</sup>/s`, 'text-slate-200');
+      } else if (state.activeModule === 'foundations') {
+        const { type, Qc, areaOrPiles } = state.foundations;
+        if (type === 'pile') {
+          const capPerPile = 260;
+          const totalCap = areaOrPiles * capPerPile;
+          const fos = totalCap / Qc;
+          grid.innerHTML =
+            metricCard('Pile Count', `${areaOrPiles} piles`, 'text-sky-400') +
+            metricCard('Group Capacity', `${totalCap} kN`, 'text-emerald-400') +
+            metricCard('Factor of Safety', `${fos.toFixed(2)}`, fos >= 2.5 ? 'text-emerald-300' : 'text-rose-400') +
+            metricCard('Load / Pile', `${(Qc / areaOrPiles).toFixed(1)} kN`, 'text-amber-400');
+        } else {
+          const effArea = type === 'raft' ? 36 : Math.max(2, areaOrPiles * 1.4);
+          const q = Qc / effArea;
+          const fos = 220 / Math.max(1, q);
+          grid.innerHTML =
+            metricCard('Bearing Stress (<strong>q</strong>)', `${q.toFixed(1)} kN/m<sup>2</sup>`, 'text-amber-400') +
+            metricCard('Effective Area', `${effArea.toFixed(1)} m<sup>2</sup>`, 'text-sky-400') +
+            metricCard('Factor of Safety', `${fos.toFixed(2)}`, fos >= 2.5 ? 'text-emerald-300' : 'text-rose-400') +
+            metricCard('Column Load (<strong>Q<sub>c</sub></strong>)', `${Qc} kN`, 'text-slate-200');
+        }
+      } else if (state.activeModule === 'geology') {
+        const { dipDeg, depthZ, rho } = state.geology;
+        const sigmaV = (rho * 9.81 * depthZ) / 1000;
+        const rad = (dipDeg * Math.PI) / 180;
+        const sigmaN = sigmaV * Math.cos(rad) * Math.cos(rad);
+        grid.innerHTML =
+          metricCard('Overburden (&sigma;<sub>v</sub>)', `${sigmaV.toFixed(1)} kPa`, 'text-amber-400') +
+          metricCard('Bed Normal (&sigma;<sub>n</sub>)', `${sigmaN.toFixed(1)} kPa`, 'text-sky-400') +
+          metricCard('Dip Angle (&alpha;)', `${dipDeg}&deg;`, 'text-emerald-400') +
+          metricCard('Depth (<strong>z</strong>)', `${depthZ} m`, 'text-slate-200');
+      } else if (state.activeModule === 'highway') {
+        const { Waxle, cbr, thickness } = state.highway;
+        const designIdx = ((Waxle / Math.max(1, cbr)) * 10).toFixed(1);
+        const status = thickness >= 35 ? 'Adequate' : 'Thin Layer';
+        grid.innerHTML =
+          metricCard('Pavement Depth', `${thickness} cm`, 'text-sky-400') +
+          metricCard('Subgrade <strong>CBR</strong>', `${cbr}%`, 'text-emerald-400') +
+          metricCard('Demand Index', `${designIdx}`, 'text-amber-400') +
+          metricCard('Structural Note', status, thickness >= 35 ? 'text-emerald-300' : 'text-rose-400');
+      } else if (state.activeModule === 'truss') {
+        const { P, span, bays } = state.truss;
+        const chordForce = (P * span) / (4 * 2.2);
+        const memberStress = (chordForce * 1000) / 1800; // MPa assuming 1800 mm^2
+        grid.innerHTML =
+          metricCard('Max Chord Force', `${chordForce.toFixed(1)} kN`, 'text-amber-400') +
+          metricCard('Axial Stress (&sigma;<sub>i</sub>)', `${memberStress.toFixed(1)} MPa`, 'text-sky-400') +
+          metricCard('Span / Bays', `${span} m / ${bays}`, 'text-emerald-400') +
+          metricCard('Applied Load (<strong>P</strong>)', `${P} kN`, 'text-slate-200');
       }
     }
 
     function updateStepUI() {
       const mod = MODULES[state.activeModule];
-      const stepData = mod.steps[state.activeStep];
-      document.querySelectorAll('.step-btn').forEach((btn) => {
-        const s = parseInt(btn.dataset.step, 10);
-        if (s === state.activeStep) {
-          btn.className = 'step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition bg-sky-500 text-slate-950';
-        } else {
-          btn.className = 'step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition text-gray-300 hover:text-white';
-        }
+      const s = mod.steps[state.activeStep];
+      document.querySelectorAll('.step-btn').forEach(btn => {
+        const n = parseInt(btn.dataset.step, 10);
+        btn.className = n === state.activeStep
+          ? 'step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition bg-sky-500 text-slate-950'
+          : 'step-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white';
       });
       document.getElementById('step-content').innerHTML = `
-        <div class="font-bold text-white text-xs sm:text-sm mb-1">${stepData.heading}</div>
-        <div>${stepData.body}</div>
+        <div class="font-bold text-white text-xs sm:text-sm mb-1">${s.heading}</div>
+        <div>${s.body}</div>
       `;
     }
 
-    function switchModule(moduleId) {
-      if (!MODULES[moduleId]) return;
-      state.activeModule = moduleId;
-      state.activeStep = 2; // Start directly in active force visualization
+    function switchModule(id, customTitle = '') {
+      if (!MODULES[id]) return;
+      state.activeModule = id;
+      state.activeStep = 2;
+      state.activeCustomTitle = customTitle;
       state.newton.posX = -5;
       state.newton.vel = 0;
       state.projectile.flightTime = 0;
 
-      document.querySelectorAll('.module-btn').forEach((btn) => {
-        if (btn.dataset.module === moduleId) {
-          btn.className = 'module-btn active-tab shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-sky-500/20 text-sky-300 border border-sky-400/50';
-        } else {
-          btn.className = 'module-btn shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-gray-800/80 text-gray-300 border border-gray-700 hover:border-gray-500';
-        }
+      document.querySelectorAll('.module-btn').forEach(btn => {
+        btn.className = btn.dataset.module === id
+          ? 'module-btn shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition bg-sky-500/20 text-sky-300 border border-sky-400/50'
+          : 'module-btn shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition bg-labCard text-slate-300 border border-slate-700/80 hover:border-slate-500';
       });
 
       renderModuleUI();
     }
 
-    // =========================================================================
-    // 8. EVENT LISTENERS (SEARCH, TABS, PLAY/PAUSE, RESET, RESIZE)
-    // =========================================================================
-    document.querySelectorAll('.module-btn').forEach((btn) => {
-      btn.addEventListener('click', () => switchModule(btn.dataset.module));
-    });
-
-    document.querySelectorAll('.step-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        state.activeStep = parseInt(btn.dataset.step, 10);
-        updateStepUI();
-      });
-    });
-
-    // Keyword Search Engine
+    // --- SEARCH ---
     const searchInput = document.getElementById('topic-search');
     const clearSearchBtn = document.getElementById('clear-search');
-    const searchResultsEl = document.getElementById('search-results');
+    const searchResults = document.getElementById('search-results');
 
     searchInput.addEventListener('input', (e) => {
       const q = e.target.value.trim().toLowerCase();
-      clearSearchBtn.classList.toggle('hidden', q.length === 0);
+      clearSearchBtn.classList.toggle('hidden', !q);
+      if (!q) { searchResults.classList.add('hidden'); return; }
 
-      if (!q) {
-        searchResultsEl.classList.add('hidden');
-        return;
-      }
-
-      const matches = Object.values(MODULES).filter((m) =>
+      const matches = Object.values(MODULES).filter(m =>
         m.title.toLowerCase().includes(q) ||
         m.category.toLowerCase().includes(q) ||
-        m.keywords.some((kw) => kw.includes(q))
+        m.keywords.some(k => k.includes(q))
       );
 
-      if (matches.length === 0) {
-        searchResultsEl.innerHTML = `<div class="text-xs text-gray-400 px-2 py-1.5">No exact match for "${q}". Try: <span class="text-sky-400">bending moment, beam, newton, friction, gravity, projectile</span>.</div>`;
-      } else {
-        searchResultsEl.innerHTML = matches.map((m) => `
-          <button data-select-mod="${m.id}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/90 flex items-center justify-between transition">
-            <div>
-              <div class="text-xs font-bold text-white">${m.title}</div>
-              <div class="text-[11px] text-gray-400">${m.category}</div>
-            </div>
-            <span class="text-xs font-mono text-sky-400">Launch →</span>
-          </button>
-        `).join('');
-      }
-      searchResultsEl.classList.remove('hidden');
+      searchResults.innerHTML = matches.length
+        ? matches.map(m => `
+            <button data-mod="${m.id}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 flex items-center justify-between transition">
+              <div>
+                <div class="text-xs font-bold text-white">${m.title}</div>
+                <div class="text-[11px] text-slate-400">${m.category}</div>
+              </div>
+              <span class="text-xs font-mono text-sky-400">Open →</span>
+            </button>
+          `).join('')
+        : `<div class="text-xs text-slate-400 px-3 py-2">No topic found for "${q}". Try <em>beam, hydraulics, pile, raft, geology, road, truss</em>.</div>`;
 
-      searchResultsEl.querySelectorAll('[data-select-mod]').forEach((btn) => {
+      searchResults.classList.remove('hidden');
+      searchResults.querySelectorAll('[data-mod]').forEach(btn => {
         btn.addEventListener('click', () => {
-          switchModule(btn.dataset.selectMod);
-          searchResultsEl.classList.add('hidden');
+          switchModule(btn.dataset.mod);
+          searchResults.classList.add('hidden');
           searchInput.value = '';
           clearSearchBtn.classList.add('hidden');
         });
@@ -1459,75 +1856,255 @@
     clearSearchBtn.addEventListener('click', () => {
       searchInput.value = '';
       clearSearchBtn.classList.add('hidden');
-      searchResultsEl.classList.add('hidden');
+      searchResults.classList.add('hidden');
     });
 
-    // Play / Pause & Reset
-    const playPauseBtn = document.getElementById('btn-play-pause');
-    playPauseBtn.addEventListener('click', () => {
+    // --- LOGIN & CUSTOM EXAMPLE MODAL ---
+    const authModal = document.getElementById('auth-modal');
+    const customModal = document.getElementById('custom-modal');
+
+    function updateUserUI() {
+      const bar = document.getElementById('user-session-bar');
+      const label = document.getElementById('auth-label');
+      if (state.user) {
+        bar.classList.remove('hidden');
+        document.getElementById('session-name').textContent = state.user.name;
+        document.getElementById('session-role-badge').textContent = state.user.role;
+        label.textContent = state.user.name.split(' ')[0];
+      } else {
+        bar.classList.add('hidden');
+        label.textContent = 'Sign In';
+      }
+    }
+
+    function updateCustomBadge() {
+      document.getElementById('custom-count-badge').textContent = state.customExamples.length;
+    }
+
+    document.getElementById('open-auth-btn').addEventListener('click', () => authModal.classList.remove('hidden'));
+    document.getElementById('close-auth-btn').addEventListener('click', () => authModal.classList.add('hidden'));
+
+    document.getElementById('auth-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      state.user = {
+        name: document.getElementById('auth-name-input').value.trim(),
+        email: document.getElementById('auth-email-input').value.trim(),
+        role: document.getElementById('auth-role-input').value
+      };
+      localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(state.user));
+      updateUserUI();
+      authModal.classList.add('hidden');
+      showToast(`Signed in as ${state.user.name}`);
+    });
+
+    document.getElementById('guest-login-btn').addEventListener('click', () => {
+      state.user = { name: 'Guest Engineer', email: 'guest@engivis.local', role: 'Guest Learner' };
+      localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(state.user));
+      updateUserUI();
+      authModal.classList.add('hidden');
+      showToast('Entered Guest Mode');
+    });
+
+    document.getElementById('sign-out-btn').addEventListener('click', () => {
+      state.user = null;
+      localStorage.removeItem(STORAGE_KEYS.user);
+      updateUserUI();
+      showToast('Signed out');
+    });
+
+    function syncCustomParamLabels() {
+      const m = document.getElementById('custom-module').value;
+      const l1 = document.getElementById('param1-label');
+      const l2 = document.getElementById('param2-label');
+      const l3 = document.getElementById('param3-label');
+      if (m === 'beam') { l1.textContent = 'Load P (kN)'; l2.textContent = 'x/L (0.1-0.9)'; l3.textContent = 'Span L (m)'; }
+      else if (m === 'newton') { l1.textContent = 'Force F (N)'; l2.textContent = 'Mass m (kg)'; l3.textContent = 'Friction μ'; }
+      else if (m === 'projectile') { l1.textContent = 'Speed v0'; l2.textContent = 'Angle (deg)'; l3.textContent = 'Gravity g0'; }
+      else if (m === 'hydraulics') { l1.textContent = 'Flow Q'; l2.textContent = 'Diam D1 (m)'; l3.textContent = 'Diam D2 (m)'; }
+      else if (m === 'foundations') { l1.textContent = 'Load Qc (kN)'; l2.textContent = 'Size / Piles'; l3.textContent = 'Depth (m)'; }
+      else if (m === 'geology') { l1.textContent = 'Dip (deg)'; l2.textContent = 'Depth z (m)'; l3.textContent = 'Density ρ'; }
+      else if (m === 'highway') { l1.textContent = 'Axle W (kN)'; l2.textContent = 'CBR (%)'; l3.textContent = 'Depth (cm)'; }
+      else { l1.textContent = 'Load P (kN)'; l2.textContent = 'Span (m)'; l3.textContent = 'Bays'; }
+    }
+
+    document.getElementById('custom-module').addEventListener('change', syncCustomParamLabels);
+
+    document.getElementById('open-custom-btn').addEventListener('click', () => {
+      syncCustomParamLabels();
+      renderSavedExamplesList();
+      customModal.classList.remove('hidden');
+    });
+    document.getElementById('close-custom-btn').addEventListener('click', () => customModal.classList.add('hidden'));
+
+    function applyExampleToState(ex) {
+      const v1 = parseFloat(ex.p1) || 1;
+      const v2 = parseFloat(ex.p2) || 1;
+      const v3 = parseFloat(ex.p3) || 1;
+
+      if (ex.module === 'beam') {
+        state.beam.P = Math.max(5, Math.min(100, v1));
+        state.beam.xRatio = Math.max(0.1, Math.min(0.9, v2));
+        state.beam.L = Math.max(4, Math.min(12, v3));
+      } else if (ex.module === 'newton') {
+        state.newton.F = Math.max(0, Math.min(150, v1));
+        state.newton.m = Math.max(2, Math.min(30, v2));
+        state.newton.mu = Math.max(0, Math.min(0.8, v3));
+      } else if (ex.module === 'projectile') {
+        state.projectile.v0 = Math.max(10, Math.min(40, v1));
+        state.projectile.angle = Math.max(15, Math.min(80, v2));
+        state.projectile.g0 = Math.max(1.0, Math.min(25, v3));
+      } else if (ex.module === 'hydraulics') {
+        state.hydraulics.Q = Math.max(0.05, Math.min(1.5, v1));
+        state.hydraulics.D1 = Math.max(0.6, Math.min(2.0, v2));
+        state.hydraulics.D2 = Math.max(0.25, Math.min(1.5, v3));
+      } else if (ex.module === 'foundations') {
+        state.foundations.Qc = Math.max(100, Math.min(1500, v1));
+        state.foundations.areaOrPiles = Math.max(1, Math.min(10, v2));
+        state.foundations.depth = Math.max(0.5, Math.min(15, v3));
+      } else if (ex.module === 'geology') {
+        state.geology.dipDeg = Math.max(0, Math.min(45, v1));
+        state.geology.depthZ = Math.max(2, Math.min(30, v2));
+        state.geology.rho = Math.max(1700, Math.min(2800, v3));
+      } else if (ex.module === 'highway') {
+        state.highway.Waxle = Math.max(40, Math.min(180, v1));
+        state.highway.cbr = Math.max(2, Math.min(35, v2));
+        state.highway.thickness = Math.max(15, Math.min(70, v3));
+      } else if (ex.module === 'truss') {
+        state.truss.P = Math.max(10, Math.min(150, v1));
+        state.truss.span = Math.max(6, Math.min(18, v2));
+        state.truss.bays = Math.max(3, Math.min(8, v3));
+      }
+
+      if (ex.note) {
+        MODULES[ex.module].steps[2].body = ex.note;
+      }
+      switchModule(ex.module, ex.title);
+    }
+
+    function renderSavedExamplesList() {
+      const list = document.getElementById('saved-examples-list');
+      if (!state.customExamples.length) {
+        list.innerHTML = `<div class="text-xs text-slate-400 py-2">No saved custom examples yet. Create one above!</div>`;
+        return;
+      }
+      list.innerHTML = state.customExamples.map(ex => `
+        <div class="flex items-center justify-between gap-2 bg-labBg border border-slate-800 rounded-xl p-2.5">
+          <div class="min-w-0">
+            <div class="text-xs font-bold text-white truncate">${ex.title}</div>
+            <div class="text-[11px] text-slate-400 truncate">${MODULES[ex.module].tabLabel} • ${ex.note || 'Custom parameters'}</div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button data-load-ex="${ex.id}" class="px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-400/40 text-xs font-semibold">Load</button>
+            <button data-del-ex="${ex.id}" class="px-2 py-1 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/30 text-xs">✕</button>
+          </div>
+        </div>
+      `).join('');
+
+      list.querySelectorAll('[data-load-ex]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const found = state.customExamples.find(x => x.id === btn.dataset.loadEx);
+          if (found) {
+            applyExampleToState(found);
+            customModal.classList.add('hidden');
+            showToast(`Loaded "${found.title}"`);
+          }
+        });
+      });
+
+      list.querySelectorAll('[data-del-ex]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.customExamples = state.customExamples.filter(x => x.id !== btn.dataset.delEx);
+          saveCustomExamples();
+          showToast('Example removed');
+        });
+      });
+    }
+
+    document.getElementById('custom-example-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const ex = {
+        id: 'ex-' + Date.now(),
+        title: document.getElementById('custom-title').value.trim(),
+        module: document.getElementById('custom-module').value,
+        p1: document.getElementById('custom-p1').value,
+        p2: document.getElementById('custom-p2').value,
+        p3: document.getElementById('custom-p3').value,
+        note: document.getElementById('custom-note').value.trim()
+      };
+      state.customExamples.unshift(ex);
+      saveCustomExamples();
+      applyExampleToState(ex);
+      customModal.classList.add('hidden');
+      document.getElementById('custom-example-form').reset();
+      showToast(`Created & launched "${ex.title}"`);
+    });
+
+    // =========================================================================
+    // 5. MAIN LOOP, RESIZE & INITIALIZATION
+    // =========================================================================
+    document.querySelectorAll('.module-btn').forEach(b => b.addEventListener('click', () => switchModule(b.dataset.module)));
+    document.querySelectorAll('.step-btn').forEach(b => b.addEventListener('click', () => {
+      state.activeStep = parseInt(b.dataset.step, 10);
+      updateStepUI();
+    }));
+
+    document.getElementById('btn-play-pause').addEventListener('click', () => {
       state.isPlaying = !state.isPlaying;
       document.getElementById('play-icon').textContent = state.isPlaying ? '⏸' : '▶';
       document.getElementById('play-label').textContent = state.isPlaying ? 'Pause' : 'Play';
     });
 
-    function resetSimulation() {
-      state.camera.theta = 0.45;
-      state.camera.phi = 1.12;
-      state.camera.radius = 14;
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      state.camera.theta = 0.48;
+      state.camera.phi = 1.08;
+      state.camera.radius = 15;
       updateCameraPosition();
-
       state.newton.posX = -5;
       state.newton.vel = 0;
       state.projectile.flightTime = 0;
       state.time = 0;
-      state.isPlaying = true;
-      document.getElementById('play-icon').textContent = '⏸';
-      document.getElementById('play-label').textContent = 'Pause';
-    }
+    });
 
-    document.getElementById('btn-reset').addEventListener('click', resetSimulation);
-    document.getElementById('mobile-reset-btn').addEventListener('click', resetSimulation);
-
-    // Responsive Canvas Resize Handler
     function handleResize() {
-      const width = container.clientWidth;
-      const height = container.clientHeight;
-      if (width === 0 || height === 0) return;
-      camera.aspect = width / height;
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      if (!w || !h) return;
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
-      renderer.setSize(width, height, false);
+      renderer.setSize(w, h, false);
     }
     window.addEventListener('resize', handleResize);
 
-    // =========================================================================
-    // 9. INITIALIZATION & MAIN ANIMATION LOOP (WINDOW ONLOAD)
-    // =========================================================================
     let lastTime = performance.now();
-
     function animate(now) {
       requestAnimationFrame(animate);
       const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
+      if (state.isPlaying) state.time += dt;
 
-      if (state.isPlaying) {
-        state.time += dt;
-      }
-
-      if (state.activeModule === 'beam') {
-        updateBeamSimulation(dt);
-      } else if (state.activeModule === 'newton') {
-        updateNewtonSimulation(dt);
-      } else if (state.activeModule === 'projectile') {
-        updateProjectileSimulation(dt);
-      }
+      if (state.activeModule === 'beam') updateBeam();
+      else if (state.activeModule === 'newton') updateNewton(dt);
+      else if (state.activeModule === 'projectile') updateProjectile(dt);
+      else if (state.activeModule === 'hydraulics') updateHydraulics(dt);
+      else if (state.activeModule === 'foundations') updateFoundations();
+      else if (state.activeModule === 'geology') updateGeology();
+      else if (state.activeModule === 'highway') updateHighway();
+      else if (state.activeModule === 'truss') updateTruss();
 
       renderer.render(scene, camera);
     }
 
     window.onload = function () {
-      initBeamScene();
-      initNewtonScene();
-      initProjectileScene();
+      buildBeam();
+      buildNewton();
+      buildProjectile();
+      buildHydraulics();
+      buildFoundations();
+      buildGeology();
+      buildHighway();
+      buildTruss();
+
+      loadPersistedData();
       updateCameraPosition();
       handleResize();
       switchModule('beam');
